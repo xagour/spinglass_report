@@ -131,23 +131,25 @@ Stefan Fleischmann \\
 %----------------------------------------------------------------------------------------
 
 \begin{abstract}
-A two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice is used to study the disordered ground state and obtain the domain wall energy $\Delta E$, by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes. This is used to calculate the critical stiffness exponent $\theta$ from the scaling relation $\Delta E \thicksim L^\theta$ where $L$ is the system size. The results obtained agree well with the known values, $\theta_{2D}=-0.287$ and $\theta_{3D}=0.23$, for two and three dimensions respectively.
+A two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice is used to study the disordered ground state and obtain the domain wall energy $\Delta E$, by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes. This is used to calculate the critical stiffness exponent $\theta$ from the scaling anzats $\Delta E \thicksim L^\theta$ where $L$ is the system size. The results obtained agree well with the known values, $\theta_{2D}=-0.287$ and $\theta_{3D}=0.23$, for two and three dimensions respectively.
 
-The method used is an optimized GPU-accelerated double checker board algorithm written in the Compute Unified Device Architecture (CUDA) language and run on a Nvidia Tesla C2070. The algorithm is benchmarked and computation times are displayed and commented on.
+The method used is an optimized GPU-accelerated double checker board algorithm written in Compute Unified Device Architecture (CUDA) language and run on a Nvidia Tesla C2070 graphics card. The algorithm is benchmarked and computation times are displayed and commented on.
 \end{abstract}
 
 \pagebreak
 
 \section{Introduction}
 
-The goal of this simulation is to examine the two-dimensional Ising model defined on a triangular lattice with zero applied field. The Binder cumulant will be used to determine the critical temperature $T_{c}$ and a finite size scaling analysis will be performed to calculate the critical exponents $\nu$ and $\beta$. This will be done both in the ferromagnetic and antiferromagnet case where frustration enters. The results will be compared with the results on a regular square lattice.
+The goal of this project is to examine an Ising spin glass model with Gaussian couplings in two and three dimensions to determine the stiffness exponent $\theta$ using GPU-accelerated algorithms. 
 
+The paper is outlined as follows. Starting of in Section \ref{sec:theory} the Ising model, frustration and spin glasses will introduced, explained and previous work on spin glasses will be mentioned. Section \ref{sec:method} contains a detailed overview of GPU architecture, the implementation using CUDA and finally optimization. Results from the simulations as well as benchmarking statistics is displayed in Section \ref{sec:results} and are discussed in the final Section \ref{sec:discussion}.
 
 \section{Theory}
+\label{sec:theory}
 
 \subsection{The Ising Model}
 
-The Ising model is one of physics most studied models concerning spin systems. It's both easy to define yet extremely rich in it's behaviour. With small variations the Ising model can describe many interesting systems from the common ferromagnet to the exotic spin glass systems we will alter examine.
+The Ising model is one of physics most studied models concerning spin systems. It's both easy to define yet extremely rich in it's behaviour. With small variations the Ising model can describe many interesting systems from the common ferromagnet to the exotic spin glass systems to be examined.
 
 The Ising model is defined by the Hamiltonian
 
@@ -155,16 +157,16 @@ The Ising model is defined by the Hamiltonian
 H = -J \sum\limits_{\left\langle i,j \right\rangle} S_{i} S_{j} -h \sum\limits_{i} S_{i}
 \end{equation}
 where $S_{i} = \pm 1$ is a spin degree of freedom on lattice site $i$, $\left< i,j \right> $ means nearest neighbour summation, $h$ is an applied magnetic field and $J$ is a coupling
-constant. When $J$ is set to $J=+1$ this represents a ferromagnetic and when $J=-1$ an antiferromagnetic.
+constant. When $J$ is set to $J=+1$ this represents a ferromagnetic and when $J=-1$ an antiferromagnetic. We will only consider the case with no external field, i.e. $h=0$.
 
 \subsection{Frustration}
-The 2D Ising model defined on a square lattice is the only one with an analytical solution apart from the 1D Ising chain.  Even thou this set up is the easiest in the two-dimensional case the exact solution is very complicated. 
+The 2D Ising model defined on a square lattice is the only one with an analytical solution apart from the 1D Ising chain. Even thou this set up is the easiest in the two-dimensional case the exact solution, first solved by Onsager, is famously complicated\cite{onsager}. 
 
-When using ferromagnetic couplings the ground state of this model is simply all spins oriented in the same direction, either up or down. In the antiferromagnetic case it is a checker board pattern of spin up and down. Obviously in both these cases the ground state is non-degenerate. If we define the 2D Ising model on a triangular lattice with ferromagnetic couplings the ground state is still all spin up or down. The antiferromagnetic case however is quite different.
+When using ferromagnetic couplings the ground state of this model is simply all spins oriented in the same direction, either up or down. In the antiferromagnetic case it is a checker board pattern of spin up and down. In both these cases the ground state is  two-fold degenerate since inverting all spins simultaneously does not affect the ground state. If we define the 2D Ising model on a triangular lattice with ferromagnetic couplings the ground state is still all spin up or down. The antiferromagnetic case however is quite different.
 
-Consider the triangular unit cell and attempt to minimize the energy. Let the top position of the triangle be the first spin, one can orientate this arbitrarily but lets choose up for now. Let the bottom left of the triangle be the second spin and we will now choose this to be down in order to minimize the energy with respect to the first spin. But how is one suppose to orientate the third and final spin located in the bottom right? 
+Consider the triangular unit cell and attempt to minimize the energy. Let the top position of the triangle be the first spin, one can orientate this arbitrarily but lets choose up for now without loss of generality. Let the bottom left of the triangle be the second spin and we will now choose this to be down in order to minimize the energy with respect to the first spin. But how is one suppose to orientate the third and final spin located in the bottom right? 
 
-If one chooses this to be spin up we minimize the energy with respect to the second spin but maximize with respect to the first one. If we instead choose spin down the situation is reversed. We can never satisfy the other two spins simultaneously. This means that the ground state of the system will never be as low as for the square lattice or ferromagnetic case. Furthermore the ground state is highly degenerate since there is no unique way to reach it. This phenomenon is known as frustration and is illustrated in Figure \ref{fig:frustration}.
+If one chooses this to be spin up we minimize the energy with respect to the second spin but maximize with respect to the first one. If we instead choose spin down the situation is reversed. We can never satisfy the other two spins simultaneously. This means that the ground state of the system will never be as low as for the square lattice or ferromagnetic case. Furthermore the ground state is highly degenerate since there is no unique way to reach it. This phenomenon is known as \emph{geometric frustration} and is illustrated in Figure \ref{fig:frustration}.
 
 \begin{figure}[hbtp]
 \centering
@@ -173,20 +175,63 @@ If one chooses this to be spin up we minimize the energy with respect to the sec
 \label{fig:frustration}
 \end{figure}
 
-\section{Simulation and/or Implementation?}
+\subsection{The Ising Spin Glass}
+In the previous section we concluded by introducing the concept of frustration through geometric frustration on a triangular lattice. There are however other ways to create frustrated systems and one of them is to introduce a new Hamiltonian
+
+\begin{equation}
+H=\sum\limits_{\left\langle i,j \right\rangle} J_{ij} S_{i} S_{j}
+\end{equation}
+where the coupling constants $J_{ij}$ now is a Gaussian random variable with zero mean and variance one. This Hamiltonian describes a class of disordered systems and we will focus on a subgroup of these called \emph{spin glasses} (SGs). What is special about SGs is the fact that they have a finite temperature disordered ground state. This means that below a critical temperature $T_c$ the disordered system will "freeze" with the spins in random positions determined by the particular set of couplings used. However, depending on the dimension of the lattice used there is a critical dimension below which there exists no finite temperature glass phase\cite{almeida}. More on this in the final section.
+
+The main objective when examining disordered system is often to determine the critical exponents and we will concern ourselves with one of these, namely the \emph{stiffness exponent} $\theta$. This can be obtained through the scaling anzats
+
+\begin{equation}
+\Delta E \thicksim L^\theta
+\label{eq:scaling}
+\end{equation}
+where $L$ is the system size and $\Delta E$ is the cost of a domain wall. $\Delta E$ can be calculated as follows:
+
+\begin{enumerate}
+\item Generate a random set of couplings and a random configuration of spins, i.e. a configuration at $T=\infty$, using periodic boundary conditions (PBCs).
+\item Do a quench by sequentially sweeping through the system and flip a spin if it is energetically favourable. Repeat until no more flips are accepted during a whole system sweep.
+\item Calculate the energy of the spin configuration, $E_{PBC}$, and perform a huge number of quenches with the same \emph{couplings}, only saving the lowest energy which yields an approximate ground state energy.
+\item Switch to anti-periodic boundary conditions (APBCs) by changing the sign of $J_{ij}$ along $x=L$ and repeat step 1-3 to obtain $E_{APBC}$.
+\item The cost of a domain wall is now given by $\Delta E = \commutator{|E_{PBC}-E_{APBC}|}$ where $[...]$ means averaging over different sets of couplings.
+\end{enumerate}
+Using Eq. \eqref{eq:scaling} the stiffness exponent can now be obtained by calculating and plotting $\Delta E$ for different system sizes. The stiffness exponent is a measure of how the strength of systems couplings scale in the low temperature phase in a renormalization group sense. If the sight of $\theta$ is positive the system scale to strong couplings and conversely if the sign is negative the system scales to weak couplings and these are characteristic behaviour of SGs and paramagnetic phase respectively \cite{almeida}. 
+
+As previously stated the objective of this project is to determine the stiffness exponent on a square lattice in two and three dimensions, using the algorithm for obtaining $\Delta E$ outlined above.
+
+\section{Method}
+\label{sec:method}
+
+\subsection{GPU-Architecture}
+
+\subsection{CUDA Implementation}
+
+\subsection{Optimization}
 
 \section{Results}
+\label{sec:results}
 
 \section{Discussion and Conclusions}
+\label{sec:discussion}
 
 \begin{thebibliography}{100}
 
-\bibitem{SVM_book}
-Nello Cristianini, John Shawe-Taylor
-\emph{An Introduction to Support Vector Machines}.
-Cambridge University Press,
-1nd Edition,
-2000.
+\bibitem{onsager}
+Crystal Statistics I. A Two-Dimensional Model with an Order-Disorder Transition
+L.Onsager
+Phys. Rev. 65, 117, (1943)
+
+\bibitem{almeida}
+Chaos and stiffness exponents for short-range Gaussian Ising spin glasses - Sebasti\~{a}o T O Almeida, Evaldo M F Curado and
+Fernando D Nobre
+
+\bibitem{hartmann}
+Stiffness exponent of two-dimensional Ising spin glasses for nonperiodic boundary conditions using aspect-ratio scaling
+Phys. Rev. B 66, 224401 – Published 4 December 2002
+Alexander K. Hartmann, Alan J. Bray, A. C. Carter, M. A. Moore, and A. P. Young
 
 \end{thebibliography}
 \end{document}
