@@ -131,7 +131,7 @@ Stefan Fleischmann \\
 %----------------------------------------------------------------------------------------
 
 \begin{abstract}
-A two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice is used to study the disordered ground state and obtain the domain wall energy $\Delta E$, by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes. This is used to calculate the critical stiffness exponent $\theta$ from the scaling anzats $\Delta E \thicksim L^\theta$ where $L$ is the system size. The results obtained agree well with the known values, $\theta_{2D}=-0.287$ and $\theta_{3D}=0.23$, for two and three dimensions respectively.
+A two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice is used to study the disordered ground state and obtain the domain wall energy $\Delta E$, by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes. This is used to calculate the critical stiffness exponent $\theta$ from the scaling anzats $\Delta E \thicksim L^\theta$ where $L$ is the system size. The results obtained agree well with the known values, $\theta_{2D}=-0.289$ and $\theta_{3D}=0.225$, for two and three dimensions respectively.
 
 The method used is an optimized GPU-accelerated double checker board algorithm written in Compute Unified Device Architecture (CUDA) language and run on a Nvidia Tesla C2070 graphics card. The algorithm is benchmarked and computation times are displayed and commented on.
 \end{abstract}
@@ -170,7 +170,7 @@ If one chooses this to be spin up we minimize the energy with respect to the sec
 
 \begin{figure}[hbtp]
 \centering
-\includegraphics[scale=0.4]{frustration.jpg}
+\includegraphics[width=\textwidth]{frustration.jpg}
 \caption{In the antiferromagnetic 2D Ising model on a triangular lattice there is no way one can orient the spins to minimize all interactions simultaneously.}
 \label{fig:frustration}
 \end{figure}
@@ -214,6 +214,20 @@ As previously stated the objective of this project is to determine the stiffness
 \section{Results}
 \label{sec:results}
 
+\begin{figure}[hbtp]
+\centering
+\includegraphics[width=\textwidth]{spinglass2D.pdf}
+\caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in two dimensions. The black line is the reference value of $\theta=-0.289$.}
+\label{fig:E_2D}
+\end{figure}
+
+\begin{figure}[hbtp]
+\centering
+\includegraphics[width=\textwidth]{spinglass3D.pdf}
+\caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in two dimensions. The black line is the reference value of $\theta=-0.225$.}
+\label{fig:E_3D}
+\end{figure}
+
 \section{Discussion and Conclusions}
 \label{sec:discussion}
 
@@ -232,6 +246,11 @@ Fernando D Nobre
 Stiffness exponent of two-dimensional Ising spin glasses for nonperiodic boundary conditions using aspect-ratio scaling
 Phys. Rev. B 66, 224401 – Published 4 December 2002
 Alexander K. Hartmann, Alan J. Bray, A. C. Carter, M. A. Moore, and A. P. Young
+
+\bibitem{nishimori}
+Statistical Physics of Spin Glasses and Information Processing: An Introduction. 
+Nishimori, Hidetoshi (2001). 
+Oxford: Oxford University Press. p. 243. ISBN 9780198509400.
 
 \end{thebibliography}
 \end{document}
