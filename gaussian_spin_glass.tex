@@ -131,7 +131,7 @@ Stefan Fleischmann \\
 %----------------------------------------------------------------------------------------
 
 \begin{abstract}
-A two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice is used to study the disordered ground state and obtain the domain wall energy $\Delta E$, by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes. This is used to calculate the critical stiffness exponent $\theta$ from the scaling anzats $\Delta E \thicksim L^\theta$ where $L$ is the system size. The results obtained agree well with the known values, $\theta_{2D}=-0.289$ and $\theta_{3D}=0.225$, for two and three dimensions respectively.
+We study the stiffness exponent $\theta$ of a two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice. The disordered ground state and the domain wall energy $\Delta E$ is obtained by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes and $theta$ is calculated from the scaling anzats $\Delta E \thicksim L^\theta$ where $L$ is the system size. The results obtained agree well with the known values, $\theta_{2D}=-0.289$ and $\theta_{3D}=0.225$, for two and three dimensions respectively.
 
 The method used is an optimized GPU-accelerated double checker board algorithm written in Compute Unified Device Architecture (CUDA) language and run on a Nvidia Tesla C2070 graphics card. The algorithm is benchmarked and computation times are displayed and commented on.
 \end{abstract}
@@ -149,7 +149,7 @@ The paper is outlined as follows. Starting of in Section \ref{sec:theory} the Is
 
 \subsection{The Ising Model}
 
-The Ising model is one of physics most studied models concerning spin systems. It's both easy to define yet extremely rich in it's behaviour. With small variations the Ising model can describe many interesting systems from the common ferromagnet to the exotic spin glass systems to be examined.
+The Ising model is one of physics most studied models concerning spin systems. It is both easy to define yet extremely rich in it is behaviour. With small variations the Ising model can describe many interesting systems from the common ferromagnet to the exotic spin glass systems to be examined.
 
 The Ising model is defined by the Hamiltonian
 
@@ -170,7 +170,7 @@ If one chooses this to be spin up we minimize the energy with respect to the sec
 
 \begin{figure}[hbtp]
 \centering
-\includegraphics[width=\textwidth]{frustration.jpg}
+\includegraphics[scale=0.5]{frustration.jpg}
 \caption{In the antiferromagnetic 2D Ising model on a triangular lattice there is no way one can orient the spins to minimize all interactions simultaneously.}
 \label{fig:frustration}
 \end{figure}
@@ -203,11 +203,10 @@ Using Eq. \eqref{eq:scaling} the stiffness exponent can now be obtained by calcu
 As previously stated the objective of this project is to determine the stiffness exponent on a square lattice in two and three dimensions, using the algorithm for obtaining $\Delta E$ outlined above.
 
 \section{Method}
+\label{sec:method}
 We start of with a serial implementation, where the spins of the lattice are enumerated sequentially. At each lattice site the Hamiltonian is applied to the current spin and, with the rest of the system "held frozen", a spin-flip is evaluated and preformed. This is a rather trivial algorithm that is easily set up and run on a conventional CPU using any given language. For this paper we are provided with an implementation, written in C, that executes the given algorithm for a 2D lattice in serial, this we generalized to a serial version for a 3D lattice. However, the implementation of the serial code will not be subject to further discussion in this paper, but will rather serve as a reference point for data verification and benchmarking.
 
 The CUDA implementation of the code will be written for the 2D lattice using some modified code snippets from the serial version, while the 3D generalization will in turn be developed using the CUDA 2D version as basis and not the 3D serial code.
-
-\label{sec:method}
 
 \subsection{GPU-Architecture}
 
@@ -217,7 +216,7 @@ The CUDA implementation of the code will be written for the 2D lattice using som
 \begin{figure}[hbtp]
 \centering
 \includegraphics[scale=0.7]{inkscape/4x4.png}
-\caption{A simple example of a 2D lattice of 4x4 spins, where the two groups of blocks are marked with back and white squares. Here the spin orientation in block 1 and 4 can be evaluated in parallel while 2 and 3 are held still and vice-versa.}
+\caption{A simple example of a 2D lattice of 4x4 spins, where the two groups of blocks are marked with black and white squares. Here the spin orientation in block 1 and 4 can be evaluated in parallel while 2 and 3 are held still and vice-versa.}
 \label{fig:frustration}
 \end{figure}
 
@@ -229,14 +228,14 @@ The CUDA implementation of the code will be written for the 2D lattice using som
 \begin{figure}[hbtp]
 \centering
 \includegraphics[width=\textwidth]{spinglass2D.pdf}
-\caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in two dimensions. The black line is the reference value of $\theta=-0.289$.}
+\caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in two dimensions. The black line is the reference value for the stiffness exponent $\theta=-0.289$.}
 \label{fig:E_2D}
 \end{figure}
 
 \begin{figure}[hbtp]
 \centering
 \includegraphics[width=\textwidth]{spinglass3D.pdf}
-\caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in two dimensions. The black line is the reference value of $\theta=-0.225$.}
+\caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in three dimensions. The black line is the reference value of $\theta=0.225$.}
 \label{fig:E_3D}
 \end{figure}
 
