@@ -138,11 +138,13 @@ The method used is an optimized GPU-accelerated double checker board algorithm w
 
 \pagebreak
 
+\tableofcontents
+
 \section{Introduction}
 
 The goal of this project is to examine an Ising spin glass model with Gaussian couplings in two and three dimensions to determine the stiffness exponent $\theta$ using GPU-accelerated algorithms. 
 
-The paper is outlined as follows. Starting of in Section \ref{sec:theory} the Ising model, frustration and spin glasses will introduced, explained and previous work on spin glasses will be mentioned. Section \ref{sec:method} contains a detailed overview of GPU architecture, the implementation using CUDA and finally optimization. Results from the simulations as well as benchmarking statistics is displayed in Section \ref{sec:results} and are discussed in the final Section \ref{sec:discussion}.
+The paper is outlined as follows. Starting of in Section \ref{sec:theory} the Ising model, frustration and spin glasses will introduced, explained and previous work on spin glasses will be mentioned. Section \ref{sec:method} contains a detailed overview of GPU architecture, the implementation using CUDA and finally optimization. Results from the simulations as well as benchmarking statistics is displayed in Section \ref{sec:results} and are discussed Section \ref{sec:discussion} and the conclusions are stated in the final Section \ref{sec:conclusions}. 
 
 \section{Theory}
 \label{sec:theory}
@@ -170,7 +172,7 @@ If one chooses this to be spin up we minimize the energy with respect to the sec
 
 \begin{figure}[hbtp]
 \centering
-\includegraphics[scale=0.5]{frustration.jpg}
+\includegraphics[scale=0.5]{images/frustration.jpg}
 \caption{In the antiferromagnetic 2D Ising model on a triangular lattice there is no way one can orient the spins to minimize all interactions simultaneously.}
 \label{fig:frustration}
 \end{figure}
@@ -189,7 +191,7 @@ The main objective when examining disordered system is often to determine the cr
 \Delta E \thicksim L^\theta
 \label{eq:scaling}
 \end{equation}
-where $L$ is the system size and $\Delta E$ is the cost of a domain wall. $\Delta E$ can be calculated as follows:
+where $L$ is the system size and $\Delta E$ is the cost of a domain wall. We will use the tried and true P-AP method\cite{hartmann}\cite{carter} to calculate $\Delta E$ which can outlined as follows:
 
 \begin{enumerate}
 \item Generate a random set of couplings and a random configuration of spins, i.e. a configuration at $T=\infty$, using periodic boundary conditions (PBCs).
@@ -215,9 +217,9 @@ The CUDA implementation of the code will be written for the 2D lattice using som
 \subsubsection{2D}
 \begin{figure}[hbtp]
 \centering
-\includegraphics[scale=0.7]{inkscape/4x4.png}
+\includegraphics[scale=0.7]{images/4x4.png}
 \caption{A simple example of a 2D lattice of 4x4 spins, where the two groups of blocks are marked with black and white squares. Here the spin orientation in block 1 and 4 can be evaluated in parallel while 2 and 3 are held still and vice-versa.}
-\label{fig:frustration}
+\label{fig:4x4}
 \end{figure}
 
 \subsection{Optimization}
@@ -225,45 +227,71 @@ The CUDA implementation of the code will be written for the 2D lattice using som
 \section{Results}
 \label{sec:results}
 
+\subsubsection{The Stiffness Exponent}
+
 \begin{figure}[hbtp]
 \centering
-\includegraphics[width=\textwidth]{spinglass2D.pdf}
+\includegraphics[width=\textwidth]{images/spinglass2D.pdf}
 \caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in two dimensions. The black line is the reference value for the stiffness exponent $\theta=-0.289$.}
 \label{fig:E_2D}
 \end{figure}
 
 \begin{figure}[hbtp]
 \centering
-\includegraphics[width=\textwidth]{spinglass3D.pdf}
+\includegraphics[width=\textwidth]{images/spinglass3D.pdf}
 \caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in three dimensions. The black line is the reference value of $\theta=0.225$.}
 \label{fig:E_3D}
 \end{figure}
 
-\section{Discussion and Conclusions}
+\subsection{GPU-algorithm Performance}
+
+\section{Discussion}
 \label{sec:discussion}
+In this section we will discuss both the physical results as well as the performance of our algorithm.
+
+\subsubsection{The Stiffness Exponent}
+Calculating the stiffness exponent is, to say the least, a time consuming task requiring huge amounts of computations. As displayed in Fig. \ref{fig:E_2D} and \ref{fig:E_3D} the number of quenches necessary to obtain an decent 
+
+\subsection{GPU-algorithm Performance}
+[DISCUSSION ABOUT GPU PERFORMANCE AND BENCHMARKING TIMES]
+
+\section{Summary and Conclusions}
+\label{sec:conclusions}
+To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbor-interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and are found to be $\theta_{2D}=-0.289$ and $\theta_{3D}=0.227$ for two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
+
+The implementation of the model was an optimized GPU-accelerated algorithm using CUDA which had great performance and showed great promise for future research.
 
 \begin{thebibliography}{100}
 
 \bibitem{onsager}
-Crystal Statistics I. A Two-Dimensional Model with an Order-Disorder Transition
-L.Onsager
+Crystal Statistics I. A Two-Dimensional Model with an Order-Disorder Transition \\
+L.Onsager \\
 Phys. Rev. 65, 117, (1943)
 
 \bibitem{almeida}
-Chaos and stiffness exponents for short-range Gaussian Ising spin glasses - Sebasti\~{a}o T O Almeida, Evaldo M F Curado and
-Fernando D Nobre
+Chaos and stiffness exponents for short-range Gaussian Ising spin glasses \\
+Sebasti\~{a}o T O Almeida, Evaldo M F Curado andFernando D Nobre \\
+J. Stat. Mech (2013)
 
 \bibitem{hartmann}
-Stiffness exponent of two-dimensional Ising spin glasses for nonperiodic boundary conditions using aspect-ratio scaling
-Phys. Rev. B 66, 224401 – Published 4 December 2002
+Stiffness exponent of two-dimensional Ising spin glasses for nonperiodic boundary conditions using aspect-ratio scaling \\
+Phys. Rev. B 66, 224401 - Published 4 December 2002 \\
 Alexander K. Hartmann, Alan J. Bray, A. C. Carter, M. A. Moore, and A. P. Young
 
+\bibitem{fisher}
+Theory of Random Magnets \\
+DS Fisher, GM Grinstein, A Khurana \\
+Physics Today, 1988 
+
+\bibitem{carter}
+Aspect-Ratio Scaling and The Stiffness Exponent $\theta$ for Ising Spin Glasses \\
+A. C. Carter, A. J. Bray, M. A. Moore (January 4, 2014) \\
+http://arxiv.org/pdf/cond-mat/0108050.pdf
+
 \bibitem{nishimori}
-Statistical Physics of Spin Glasses and Information Processing: An Introduction. 
-Nishimori, Hidetoshi (2001). 
+Statistical Physics of Spin Glasses and Information Processing: An Introduction. \\
+Nishimori, Hidetoshi (2001). \\
 Oxford: Oxford University Press. p. 243. ISBN 9780198509400.
 
 \end{thebibliography}
-\end{document}
-
 \end{document}
