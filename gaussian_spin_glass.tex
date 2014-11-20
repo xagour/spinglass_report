@@ -144,7 +144,7 @@ The method used is an optimized GPU-accelerated double checker board algorithm w
 
 The goal of this project is to examine an Ising spin glass model with Gaussian couplings in two and three dimensions to determine the stiffness exponent $\theta$ using GPU-accelerated algorithms. 
 
-The paper is outlined as follows. Starting of in Section \ref{sec:theory} the Ising model, frustration and spin glasses will introduced, explained and previous work on spin glasses will be mentioned. Section \ref{sec:method} contains a detailed overview of GPU architecture, the implementation using CUDA and finally optimization. Results from the simulations as well as benchmarking statistics is displayed in Section \ref{sec:results} and are discussed Section \ref{sec:discussion} and the conclusions are stated in the final Section \ref{sec:conclusions}. 
+The paper is outlined as follows. Starting of in Section \ref{sec:theory} the Ising model, frustration and spin glasses will introduced, explained and previous work on spin glasses will be mentioned. Section \ref{sec:method} contains a detailed overview of GPU architecture, the implementation using CUDA and finally optimization. Results from the simulations as well as benchmarking statistics is displayed in Section \ref{sec:results} and are discussed in the final Section \ref{sec:discussion}.
 
 \section{Theory}
 \label{sec:theory}
@@ -183,7 +183,7 @@ In the previous section we concluded by introducing the concept of frustration t
 \begin{equation}
 H=\sum\limits_{\left\langle i,j \right\rangle} J_{ij} S_{i} S_{j}
 \end{equation}
-where the coupling constants $J_{ij}$ now is a Gaussian random variable with zero mean and variance one. This Hamiltonian describes a class of disordered systems and we will focus on a subgroup of these called \emph{spin glasses} (SGs). What is special about SGs is the fact that they have a finite temperature disordered ground state. This means that below a critical temperature $T_c$ the disordered system will "freeze" with the spins in random positions determined by the particular set of couplings used. However, depending on the dimension of the lattice used there is a critical dimension below which there exists no finite temperature glass phase\cite{almeida}. More on this in the final section.
+where the coupling constants $J_{ij}$ now is a Gaussian random variable with zero mean and variance one. This Hamiltonian describes a class of disordered systems and we will focus on a subgroup of these called \emph{spin glasses} (SGs). What is special about SGs is the fact that they have a finite temperature disordered ground state. This means that below a critical temperature $T_c$ the disordered system will "freeze" with the spins in random positions determined by the particular set of couplings used. However, depending on the dimension of the lattice used there is a critical dimension below which there exists no finite temperature glass phase\cite{almeida}.
 
 The main objective when examining disordered system is often to determine the critical exponents and we will concern ourselves with one of these, namely the \emph{stiffness exponent} $\theta$. This can be obtained through the scaling anzats
 
@@ -200,7 +200,7 @@ where $L$ is the system size and $\Delta E$ is the cost of a domain wall. We wil
 \item Switch to anti-periodic boundary conditions (APBCs) by changing the sign of $J_{ij}$ along $x=L$ and repeat step 1-3 to obtain $E_{APBC}$.
 \item The cost of a domain wall is now given by $\Delta E = \commutator{|E_{PBC}-E_{APBC}|}$ where $[...]$ means averaging over different sets of couplings.
 \end{enumerate}
-Using Eq. \eqref{eq:scaling} the stiffness exponent can now be obtained by calculating and plotting $\Delta E$ for different system sizes. The stiffness exponent is a measure of how the strength of systems couplings scale in the low temperature phase in a renormalization group sense. If the sight of $\theta$ is positive the system scale to strong couplings and conversely if the sign is negative the system scales to weak couplings and these are characteristic behaviour of SGs and paramagnetic phase respectively \cite{almeida}. 
+Using Eq. \eqref{eq:scaling} the stiffness exponent can now be obtained by calculating and plotting $\Delta E$ for different system sizes. The stiffness exponent is a measure of how the strength of systems couplings scale in the low temperature phase in a renormalization group sense. If the sign of $\theta$ is positive the system scale to strong couplings and conversely if the sign is negative the system scales to weak couplings and these are characteristic behaviour of SGs and paramagnetic phase respectively \cite{almeida}. 
 
 As previously stated the objective of this project is to determine the stiffness exponent on a square lattice in two and three dimensions, using the algorithm for obtaining $\Delta E$ outlined above.
 
@@ -227,7 +227,7 @@ The CUDA implementation of the code will be written for the 2D lattice using som
 \section{Results}
 \label{sec:results}
 
-\subsubsection{The Stiffness Exponent}
+\subsection{The Stiffness Exponent}
 
 \begin{figure}[hbtp]
 \centering
@@ -243,23 +243,24 @@ The CUDA implementation of the code will be written for the 2D lattice using som
 \label{fig:E_3D}
 \end{figure}
 
-\subsection{GPU-algorithm Performance}
+\subsection{GPU-Algorithm Performance}
 
 \section{Discussion}
 \label{sec:discussion}
 In this section we will discuss both the physical results as well as the performance of our algorithm.
 
-\subsubsection{The Stiffness Exponent}
-Calculating the stiffness exponent is, to say the least, a time consuming task requiring huge amounts of computations. As displayed in Fig. \ref{fig:E_2D} and \ref{fig:E_3D} the number of quenches necessary to obtain an decent 
+\subsection{The Stiffness Exponent}
+Calculating the stiffness exponent is, to say the least, a time consuming task requiring huge amounts of computations. As displayed in Fig. \ref{fig:E_2D} and \ref{fig:E_3D} the number of quenches necessary to obtain an decent approximation the ground state rapidly increases and on top of that, the time to perform each quench increases with the system size. This can be seen by observing that $(\Delta E)^2$ rapidly diverges from the expected result for a low number of quenches. This reflects the nature of the SGs with huge numbers of metastable states and the difficulty to find an approximate ground state. You need to start from increasingly many initial spin configurations in order to find a few where you do not get stuck in a local minima. The only upside with this extremely complex problem is the fact that it is parallelizable and thus well suited for computing on a GPU.
 
-\subsection{GPU-algorithm Performance}
-[DISCUSSION ABOUT GPU PERFORMANCE AND BENCHMARKING TIMES]
+\subsection{GPU-Algorithm Performance}
+[STEFAN: DISCUSSION ABOUT GPU PERFORMANCE AND BENCHMARKING TIMES]
 
-\section{Summary and Conclusions}
-\label{sec:conclusions}
-To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbor-interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and are found to be $\theta_{2D}=-0.289$ and $\theta_{3D}=0.227$ for two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
+\subsection{Concluding Remarks}
+To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbour-interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and are found to be $\theta_{2D}=-0.289$ and $\theta_{3D}=0.227$ for two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
 
 The implementation of the model was an optimized GPU-accelerated algorithm using CUDA which had great performance and showed great promise for future research.
+
+\pagebreak
 
 \begin{thebibliography}{100}
 
