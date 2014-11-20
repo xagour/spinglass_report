@@ -131,7 +131,7 @@ Stefan Fleischmann \\
 %----------------------------------------------------------------------------------------
 
 \begin{abstract}
-We study the stiffness exponent $\theta$ of a two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice. The disordered ground state and the domain wall energy $\Delta E$ is obtained by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes and $theta$ is calculated from the scaling anzats $\Delta E \thicksim L^\theta$ where $L$ is the system size. The results obtained agree well with the known values, $\theta_{2D}=-0.289$ and $\theta_{3D}=0.225$, for two and three dimensions respectively.
+We study the stiffness exponent $\theta$ of a two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice. The disordered ground state and the domain wall energy $\Delta E$ is obtained by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes and $\theta$ is calculated from the scaling anzats $\Delta E \thicksim L^\theta$ where $L$ is the system size. The results obtained agree well with the known values, $\theta_{2D}=-0.289$ and $\theta_{3D}=0.225$, for two and three dimensions respectively.
 
 The method used is an optimized GPU-accelerated double checker board algorithm written in Compute Unified Device Architecture (CUDA) language and run on a Nvidia Tesla C2070 graphics card. The algorithm is benchmarked and computation times are displayed and commented on.
 \end{abstract}
@@ -142,7 +142,7 @@ The method used is an optimized GPU-accelerated double checker board algorithm w
 
 \section{Introduction}
 
-The goal of this project is to examine an Ising spin glass model with Gaussian couplings in two and three dimensions to determine the stiffness exponent $\theta$ using GPU-accelerated algorithms. 
+The goal of this project is to examine an Ising spin glass model with Gaussian couplings in two and three dimensions to determine the stiffness exponent $\theta$ using a GPU-accelerated algorithm. 
 
 The paper is outlined as follows. Starting of in Section \ref{sec:theory} the Ising model, frustration and spin glasses will introduced, explained and previous work on spin glasses will be mentioned. Section \ref{sec:method} contains a detailed overview of GPU architecture, the implementation using CUDA and finally optimization. Results from the simulations as well as benchmarking statistics is displayed in Section \ref{sec:results} and are discussed in the final Section \ref{sec:discussion}.
 
