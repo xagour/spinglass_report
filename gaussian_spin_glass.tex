@@ -208,18 +208,56 @@ As previously stated the objective of this project is to determine the stiffness
 \label{sec:method}
 We start of with a serial implementation, where the spins of the lattice are enumerated sequentially. At each lattice site the Hamiltonian is applied to the current spin and, with the rest of the system "held frozen", a spin-flip is evaluated and preformed. This is a rather trivial algorithm that is easily set up and run on a conventional CPU using any given language. For this paper we are provided with an implementation, written in C, that executes the given algorithm for a 2D lattice in serial, this we generalized to a serial version for a 3D lattice. However, the implementation of the serial code will not be subject to further discussion in this paper, but will rather serve as a reference point for data verification and benchmarking.
 
-The CUDA implementation of the code will be written for the 2D lattice using some modified code snippets from the serial version, while the 3D generalization will in turn be developed using the CUDA 2D version as basis and not the 3D serial code.
+The CUDA implementation of the code will be written for the 2D lattice using modified code snippets from the serial version, while the 3D generalization will in turn be developed using the CUDA 2D version as basis.
 
 \subsection{GPU-Architecture}
 
-\subsection{CUDA Implementation}
+[MENTION: KERNEL, SHARED MEMORY, BLOCKS, THREADS]
 
-\subsubsection{2D}
-\begin{figure}[hbtp]
+
+\subsection{CUDA Implementation}
+To be able to parallelize any problem in general one is required to split the problem up into isolated computational units, that in turn can be distributed to the available computational units. If one fails to accomplish isolated calculations a phenomenon known as race conditions will render non-deterministic calculation results. This essential emerges from the fact that individual computational units will execute code in an undefined order. Here we present an approach surmount this issue in the 2D and 3D case similar to that presented by M. Weigel and T. Yavors \cite{gpu_mc_spins}.
+
+\subsubsection{2 Dimensions}
+By placing a checker patter over the 2D grid of spins (figure \ref{fig:checker_grid}) the system is divided up into blocks of black and white tiles. Noticing that there are no couplings between individual black tiles and individual white tiles, but only in between black and white tiles, we conclude that each set of blocks are individually isolated and thus suitable for computation in parallel. One set of block will be set to be calculated while the other is felled "frozen". After the first set is completed shared and global memory is synchronized and the second set is attended to.
+
+Each block will be designated for one CUDA block and thus will have to be isolated in memory from the rest of the system. Noticing that each give block will interact with its nearest neighbours, it is necessary to bring these spins and their corresponding couplings into the shared memory of the specific block, for efficient memory access. Refereed to as ghost couplings and cells, they are shown respectively as dashed lines and blue blobs in figure \ref{fig:gost_cells} for a block of $2\times2$.
+
+
+\begin{figure}
 \centering
-\includegraphics[scale=0.7]{images/4x4.png}
-\caption{A simple example of a 2D lattice of 4x4 spins, where the two groups of blocks are marked with black and white squares. Here the spin orientation in block 1 and 4 can be evaluated in parallel while 2 and 3 are held still and vice-versa.}
-\label{fig:4x4}
+\begin{minipage}{.65\textwidth}
+  \centering
+  \includegraphics[width=.5\linewidth]{images/4x4.png}
+  \caption{The two groups of blocks are marked with black and white squares. Here the spin orientation in block 1 and 4 can be evaluated in parallel while 2 and 3 are held still and vice-versa.}
+  \label{fig:checker_grid}
+\end{minipage}
+\hspace{0.05\linewidth}
+\begin{minipage}{.25\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{images/2D_ghosts.png}
+  \captionof{figure}{A block including its ghost cells.}
+  \label{fig:gost_cells}
+\end{minipage}
+\end{figure}
+
+
+It is further recognized that ghost cells will have to be selected with the periodic boundary condition in mind. Hence the indices of for instance the neighbouring spins in the two directions along the x-axis will be
+\begin{align*}
+x_+&=(x_c+1)\; \% \; L \;, \\
+x_-&=(x_c-1+L) \; \% \; L \;.
+\end{align*}
+Here $x_+$ and $x_-$ are the indices of the neighbouring spins along the positive and negative direction of the x-axis, $x_c$ is the index of the current spin, $L$ the side of the global system and $\%$ signifies the modulus operator.
+
+The spins will be further divided into computational threads inside each block. Theses will have access to the same shared memory and will begin to populate it with data picked from the global memory. Here, the number of spins attended to by each thread is fixed to 2. Shown for the $2\times2$ block in figure \ref{fig:2D_threads} each thread will attend to a spin at a time and to avoid race conditions a synchronization is preformed in between the two spin flips per thread. Thus the spins attended to in parallel are marked as red and green respectively for each set.
+ 
+This division into 2 spins per thread will imply a divisibility by 2 for the block size that will in turn migrate up to the system size. Hence, the allowed system sized will be $4\times4$, $8\times8$, $16\times16$...
+
+\begin{figure}
+\centering
+\includegraphics[width=.4\linewidth]{images/2D_threads.png}
+\caption{Thread division in each block. Non-interacting spins are grouped in read and green.}
+\label{fig:2D_threads}
 \end{figure}
 
 \subsection{Optimization}
@@ -293,6 +331,11 @@ http://arxiv.org/pdf/cond-mat/0108050.pdf
 Statistical Physics of Spin Glasses and Information Processing: An Introduction. \\
 Nishimori, Hidetoshi (2001). \\
 Oxford: Oxford University Press. p. 243. ISBN 9780198509400.
+
+\bibitem{gpu_mc_spins}
+\textit{GPU accelerated Monte Carlo simulations of lattice spin models} \\
+M. Weigel, T. Yavors. \\
+Physics Procedia, \textbf{15} (2011)
 
 \end{thebibliography}
 \end{document}
