@@ -15,5 +15,5 @@
 \contentsline {subsection}{\numberline {4.2}GPU-Algorithm Performance}{7}
 \contentsline {section}{\numberline {5}Discussion}{7}
 \contentsline {subsection}{\numberline {5.1}The Stiffness Exponent}{7}
-\contentsline {subsection}{\numberline {5.2}GPU-Algorithm Performance}{7}
+\contentsline {subsection}{\numberline {5.2}GPU-Algorithm Performance}{10}
 \contentsline {subsection}{\numberline {5.3}Concluding Remarks}{10}

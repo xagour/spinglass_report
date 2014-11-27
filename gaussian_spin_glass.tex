@@ -228,14 +228,14 @@ Each block will be designated for one CUDA block and thus will have to be isolat
 \centering
 \begin{minipage}{.65\textwidth}
   \centering
-  \includegraphics[width=.5\linewidth]{images/4x4.png}
+  \includegraphics[width=.5\linewidth]{images/4x4.pdf}
   \caption{The two groups of blocks are marked with black and white squares. Here the spin orientation in block 1 and 4 can be evaluated in parallel while 2 and 3 are held still and vice-versa.}
   \label{fig:checker_grid}
 \end{minipage}
 \hspace{0.05\linewidth}
 \begin{minipage}{.25\textwidth}
   \centering
-  \includegraphics[width=1\linewidth]{images/2D_ghosts.png}
+  \includegraphics[width=1\linewidth]{images/2D_ghosts.pdf}
   \captionof{figure}{A block including its ghost cells.}
   \label{fig:gost_cells}
 \end{minipage}
@@ -255,7 +255,7 @@ This division into 2 spins per thread will imply a divisibility by 2 for the blo
 
 \begin{figure}
 \centering
-\includegraphics[width=.4\linewidth]{images/2D_threads.png}
+\includegraphics[width=.4\linewidth]{images/2D_threads.pdf}
 \caption{Thread division in each block. Non-interacting spins are grouped in red and green.}
 \label{fig:2D_threads}
 \end{figure}
