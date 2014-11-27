@@ -212,13 +212,13 @@ The CUDA implementation of the code will be written for the 2D lattice using mod
 
 \subsection{GPU-Architecture}
 
-[MENTION: KERNEL, SHARED MEMORY, BLOCKS, THREADS]
+[MENTION: KERNELS, SHARED MEMORY, BLOCKS, THREADS]
 
 
 \subsection{CUDA Implementation}
 To be able to parallelize any problem in general one is required to split the problem up into isolated computational units, that in turn can be distributed to the available computational units. If one fails to accomplish isolated calculations a phenomenon known as race conditions will render non-deterministic calculation results. This essential emerges from the fact that individual computational units will execute code in an undefined order. Here we present an approach surmount this issue in the 2D and 3D case similar to that presented by M. Weigel and T. Yavors \cite{gpu_mc_spins}.
 
-\subsubsection{2 Dimensions}
+\subsubsection{Two Dimensions}
 By placing a checker patter over the 2D grid of spins (figure \ref{fig:checker_grid}) the system is divided up into blocks of black and white tiles. Noticing that there are no couplings between individual black tiles and individual white tiles, but only in between black and white tiles, we conclude that each set of blocks are individually isolated and thus suitable for computation in parallel. One set of block will be set to be calculated while the other is felled "frozen". After the first set is completed shared and global memory is synchronized and the second set is attended to.
 
 Each block will be designated for one CUDA block and thus will have to be isolated in memory from the rest of the system. Noticing that each give block will interact with its nearest neighbours, it is necessary to bring these spins and their corresponding couplings into the shared memory of the specific block, for efficient memory access. Refereed to as ghost couplings and cells, they are shown respectively as dashed lines and blue blobs in figure \ref{fig:gost_cells} for a block of $2\times2$.
@@ -256,9 +256,13 @@ This division into 2 spins per thread will imply a divisibility by 2 for the blo
 \begin{figure}
 \centering
 \includegraphics[width=.4\linewidth]{images/2D_threads.png}
-\caption{Thread division in each block. Non-interacting spins are grouped in read and green.}
+\caption{Thread division in each block. Non-interacting spins are grouped in red and green.}
 \label{fig:2D_threads}
 \end{figure}
+
+
+\subsubsection{Three Dimensions}
+In three dimensions basically the same approach is employed 
 
 \subsection{Optimization}
 
