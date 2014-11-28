@@ -219,9 +219,9 @@ The CUDA implementation of the code will be written for the 2D lattice using mod
 To be able to parallelize any problem in general one is required to split the problem up into isolated computational units, that in turn can be distributed to the available computational units. If one fails to accomplish isolated calculations a phenomenon known as race conditions will render non-deterministic calculation results. This essential emerges from the fact that individual computational units will execute code in an undefined order. Here we present an approach surmount this issue in the 2D and 3D case similar to that presented by M. Weigel and T. Yavors \cite{gpu_mc_spins}.
 
 \subsubsection{Two Dimensions}
-By placing a checker patter over the 2D grid of spins (figure \ref{fig:checker_grid}) the system is divided up into blocks of black and white tiles. Noticing that there are no couplings between individual black tiles and individual white tiles, but only in between black and white tiles, we conclude that each set of blocks are individually isolated and thus suitable for computation in parallel. One set of block will be set to be calculated while the other is felled "frozen". After the first set is completed shared and global memory is synchronized and the second set is attended to.
+By placing a checker patter over the 2D grid of spins (figure \ref{fig:checker_grid}) the system is divided up into black and white tiles. Noticing that there are no couplings between individual black tiles and individual white tiles, but only in between black and white tiles, we conclude that each set of these are individually isolated and thus suitable for computation in parallel. One set of tiles will be set to be calculated while the other is felled "frozen". After the first set is completed shared and global memory is synchronized and the second set is attended to.
 
-Each block will be designated for one CUDA block and thus will have to be isolated in memory from the rest of the system. Noticing that each give block will interact with its nearest neighbours, it is necessary to bring these spins and their corresponding couplings into the shared memory of the specific block, for efficient memory access. Refereed to as ghost couplings and cells, they are shown respectively as dashed lines and blue blobs in figure \ref{fig:gost_cells} for a block of $2\times2$.
+Each tile in the set will be designated for one CUDA block and thus will have to be self-consistent in shared memory. Noticing that each given tile will interact with its nearest neighbours, hence it is necessary to bring these spins and their corresponding couplings into the shared memory of the corresponding CUDA block, for efficient memory access. Refereed to as ghost couplings and spins, these are shown respectively as dashed lines and blue blobs in figure \ref{fig:gost_cells} for a tile of $2\times2$.
 
 
 \begin{figure}
@@ -229,29 +229,40 @@ Each block will be designated for one CUDA block and thus will have to be isolat
 \begin{minipage}{.65\textwidth}
   \centering
   \includegraphics[width=.5\linewidth]{images/4x4.pdf}
-  \caption{The two groups of blocks are marked with black and white squares. Here the spin orientation in block 1 and 4 can be evaluated in parallel while 2 and 3 are held still and vice-versa.}
+  \caption{The two groups of tiles are marked with black and white squares. Here the spin orientation in tile 1 and 4 can be evaluated in parallel while 2 and 3 are held still and vice-versa.}
   \label{fig:checker_grid}
 \end{minipage}
 \hspace{0.05\linewidth}
 \begin{minipage}{.25\textwidth}
   \centering
   \includegraphics[width=1\linewidth]{images/2D_ghosts.pdf}
-  \captionof{figure}{A block including its ghost cells.}
+  \captionof{figure}{A tile including its ghost cells.}
   \label{fig:gost_cells}
 \end{minipage}
 \end{figure}
 
 
-It is further recognized that ghost cells will have to be selected with the periodic boundary condition in mind. Hence the indices of for instance the neighbouring spins in the two directions along the x-axis will be
+It is further recognized that ghost spins will have to be selected with the periodic boundary condition in mind. Hence the indices of for instance the neighbouring spins in the two directions along the x-axis will be
 \begin{align*}
-x_+&=(x_c+1)\; \% \; L \;, \\
-x_-&=(x_c-1+L) \; \% \; L \;.
+x_+&=(x_c+1)\; \text{mod} \; L \;, \\
+x_-&=(x_c-1+L) \; \text{mod} \; L \;.
 \end{align*}
-Here $x_+$ and $x_-$ are the indices of the neighbouring spins along the positive and negative direction of the x-axis, $x_c$ is the index of the current spin, $L$ the side of the global system and $\%$ signifies the modulus operator.
+Here $x_+$ and $x_-$ are the indices of the neighbouring spins along the positive and negative direction of the x-axis, $x_c$ is the index of the current spin, $L$ the side of the global system and "mod" signifies the modulus operator.
 
-The spins will be further divided into computational threads inside each block. Theses will have access to the same shared memory and will begin to populate it with data picked from the global memory. Here, the number of spins attended to by each thread is fixed to 2. Shown for the $2\times2$ block in figure \ref{fig:2D_threads} each thread will attend to a spin at a time and to avoid race conditions a synchronization is preformed in between the two spin flips per thread. Thus the spins attended to in parallel are marked as red and green respectively for each set.
+The number of computational CUDA blocks are half the number of the total number of tiles, since half of the system can be calculated in parallel. In the example shown in figure \ref{fig:checker_grid} there will be two CUDA blocks submitted for calculation, when they are finished the white tiles are submitted. This is done row-wise, where a group of a black and a white tile are sequentially sent for calculation. The first tile of the first row will be set to be white, while on the second row the second tile is instead white. This is achieved in 2D by alternating between these selection-modes using the boolean condition 
+\begin{equation}
+b_y\; \text{mod} \; 2 == 0 \;,
+\label{eq:sele_mode_2d}
+\end{equation}
+where $b_y$ is the block row index. This condition will yield "true" if $b_y$ is even and "false" if not.
+
+The spins will be further divided into computational threads inside each block. Theses will have access to the same shared memory and will begin to populate it with data picked from the global memory. Here, the number of spins attended to by each thread is fixed to 2. Shown for the $2\times2$ block in figure \ref{fig:2D_threads} each thread will attend to a spin at a time and to avoid race conditions a synchronization is preformed in between the two spin flips per thread. Thus the spins attended to in parallel are marked as red and green respectively for each set. The selection of the first or the second spin to be handled first by each thread is based on the same condition as in \ref{eq:sele_mode_2d}.
  
 This division into 2 spins per thread will imply a divisibility by 2 for the block size that will in turn migrate up to the system size. Hence, the allowed system sized will be $4\times4$, $8\times8$, $16\times16$...
+
+Multi-dimensional array are avoided, even though it is more convenient given the programming point of view, specially since CUDA provides with an API for handling this kind of set-up. The reason they are avoided is foremost since they introduce an extra overhead as an extra memory look-up during access and as a more expensive allocation and population during initialization and transfer between host and device.
+
+The access is instead solved by the utilization of an arithmetic operation where the location in memory is calculated before access using $x + y \times L$, where $x$ is the column index, $y$ is the row index and $L$ is the column count of each row.
 
 \begin{figure}
 \centering
@@ -262,7 +273,16 @@ This division into 2 spins per thread will imply a divisibility by 2 for the blo
 
 
 \subsubsection{Three Dimensions}
-In three dimensions basically the same approach is employed 
+In three dimensions basically the same approach is employed. However, there is an extra set of coupling along the new direction and all the system quantities are added an extra dimensions, that is the three sets of couplings and the spins. 
+
+Furthermore the selection-mode for starting with black or white tiles at each row is instead of the boolean condition \ref{eq:sele_mode_2d} chosen based on
+\begin{equation}
+(b_y + b_z)\; \text{mod} \; 2 == 0 \;,
+\end{equation}
+where $b_y$ and $b_z$ are the row and depth indexes of the blocks, respectively. 
+
+In addition to this, another key difference compared to the 2D version is the calculation of the memory index that includes the depth index $z$ as well, yielding $x + y \times L + z \times L^2$.
+
 
 \subsection{Optimization}
 
