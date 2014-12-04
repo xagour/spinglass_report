@@ -7,7 +7,7 @@
 \contentsline {section}{\numberline {3}Method}{5}
 \contentsline {subsection}{\numberline {3.1}GPU-Architecture}{5}
 \contentsline {subsection}{\numberline {3.2}CUDA Implementation}{5}
-\contentsline {subsubsection}{\numberline {3.2.1}Two Dimensions}{5}
+\contentsline {subsubsection}{\numberline {3.2.1}Two Dimensions}{6}
 \contentsline {subsubsection}{\numberline {3.2.2}Three Dimensions}{7}
 \contentsline {subsection}{\numberline {3.3}Optimization}{8}
 \contentsline {section}{\numberline {4}Results}{8}
