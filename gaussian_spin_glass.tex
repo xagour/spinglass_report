@@ -30,6 +30,7 @@
 \usepackage{multicol}
 \usepackage{enumitem}
 \usepackage{caption}
+\usepackage{hyperref}
 \usepackage{esint}
 
 \usepackage{listings}
@@ -131,9 +132,9 @@ Stefan Fleischmann \\
 %----------------------------------------------------------------------------------------
 
 \begin{abstract}
-We study the stiffness exponent $\theta$ of a two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice. The disordered ground state and the domain wall energy $\Delta E$ is obtained by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes and $\theta$ is calculated from the scaling anzats $\Delta E \thicksim L^\theta$ where $L$ is the system size. The results obtained agree well with the known values, $\theta_{2D}=-0.289$ and $\theta_{3D}=0.225$, for two and three dimensions respectively.
+We study the stiffness exponent $\theta$ of a two and three dimensional Ising spin glass model with Gaussian couplings on a square lattice. The disordered ground state and the domain wall energy $\Delta E$ are obtained by quenching the system from $T=\infty$ to $T=0 K$ for various system sizes $L$. $\theta$ is calculated from the scaling ansatz $\Delta E \thicksim L^\theta$. The results obtained agree well with the known values $\theta_{2D}=-0.289$ and $\theta_{3D}=0.225$ for two and three dimensions, respectively.
 
-The method used is an optimized GPU-accelerated double checker board algorithm written in Compute Unified Device Architecture (CUDA) language and run on a Nvidia Tesla C2070 graphics card. The algorithm is benchmarked and computation times are displayed and commented on.
+The method used is an optimized GPU-accelerated double checker board algorithm written in Compute Unified Device Architecture (CUDA) language and run on a NVIDIA Fermi and Kepler generation graphics cards. The algorithm is benchmarked and computation times are displayed and commented on.
 \end{abstract}
 
 \pagebreak
@@ -142,31 +143,30 @@ The method used is an optimized GPU-accelerated double checker board algorithm w
 
 \section{Introduction}
 
-The goal of this project is to examine an Ising spin glass model with Gaussian couplings in two and three dimensions to determine the stiffness exponent $\theta$ using a GPU-accelerated algorithm. 
+The goal of this project is to examine an Ising spin glass model with Gaussian couplings in two and three dimensions to determine the stiffness exponent $\theta$ using a GPU-accelerated algorithm.
 
-The paper is outlined as follows. Starting of in Section \ref{sec:theory} the Ising model, frustration and spin glasses will introduced, explained and previous work on spin glasses will be mentioned. Section \ref{sec:method} contains a detailed overview of GPU architecture, the implementation using CUDA and finally optimization. Results from the simulations as well as benchmarking statistics is displayed in Section \ref{sec:results} and are discussed in the final Section \ref{sec:discussion}.
+The paper is outlined as follows. Starting off in Section \ref{sec:theory} the Ising model, frustration and spin glasses will be introduced and previous work on spin glasses will be mentioned. Section \ref{sec:method} contains an overview of GPU architecture, the implementation using CUDA and finally possible optimizations. Results from the simulations as well as benchmarking results are displayed in Section \ref{sec:results} and are discussed in the final Section \ref{sec:discussion}.
 
 \section{Theory}
 \label{sec:theory}
 
 \subsection{The Ising Model}
 
-The Ising model is one of physics most studied models concerning spin systems. It is both easy to define yet extremely rich in it is behaviour. With small variations the Ising model can describe many interesting systems from the common ferromagnet to the exotic spin glass systems to be examined.
+The Ising model is one of the most studied models concerning spin systems in physics. It is easy to define and yet extremely rich in its behaviour. With small variations the Ising model can describe many interesting systems from the common ferromagnet to the exotic spin glass systems that we examine in this project.
 
 The Ising model is defined by the Hamiltonian
 
 \begin{equation}
 H = -J \sum\limits_{\left\langle i,j \right\rangle} S_{i} S_{j} -h \sum\limits_{i} S_{i}
 \end{equation}
-where $S_{i} = \pm 1$ is a spin degree of freedom on lattice site $i$, $\left< i,j \right> $ means nearest neighbour summation, $h$ is an applied magnetic field and $J$ is a coupling
-constant. When $J$ is set to $J=+1$ this represents a ferromagnetic and when $J=-1$ an antiferromagnetic. We will only consider the case with no external field, i.e. $h=0$.
+where $S_{i} = \pm 1$ is a spin degree of freedom on a lattice site $i$, $\left< i,j \right> $ means nearest neighbour summation, $h$ is an applied magnetic field and $J$ is a coupling constant. With $J$ set to $+1$ it represents a ferromagnetic and with $J=-1$ an antiferromagnetic. We will only consider the case without external field, i.e. $h=0$.
 
 \subsection{Frustration}
-The 2D Ising model defined on a square lattice is the only one with an analytical solution apart from the 1D Ising chain. Even thou this set up is the easiest in the two-dimensional case the exact solution, first solved by Onsager, is famously complicated\cite{onsager}. 
+The 2D Ising model defined on a square lattice is the only one with an analytical solution apart from the 1D Ising chain. Even though this setup is the simplest one for the two-dimensional case, the exact solution first solved by Onsager is famously complicated\cite{onsager}.
 
-When using ferromagnetic couplings the ground state of this model is simply all spins oriented in the same direction, either up or down. In the antiferromagnetic case it is a checker board pattern of spin up and down. In both these cases the ground state is  two-fold degenerate since inverting all spins simultaneously does not affect the ground state. If we define the 2D Ising model on a triangular lattice with ferromagnetic couplings the ground state is still all spin up or down. The antiferromagnetic case however is quite different.
+When using ferromagnetic couplings the ground state of this system is simply all spins oriented in the same direction, either up or down. In the antiferromagnetic case it is a checker board pattern of spin up and down. In both these cases the ground state is two-fold degenerate since inverting all spins simultaneously does not affect the ground state energy. If we define the 2D Ising model on a triangular lattice with ferromagnetic couplings the ground state is still all spin up or down. The antiferromagnetic case however is quite different.
 
-Consider the triangular unit cell and attempt to minimize the energy. Let the top position of the triangle be the first spin, one can orientate this arbitrarily but lets choose up for now without loss of generality. Let the bottom left of the triangle be the second spin and we will now choose this to be down in order to minimize the energy with respect to the first spin. But how is one suppose to orientate the third and final spin located in the bottom right? 
+Consider the triangular unit cell and attempt to minimize the energy. Let the top position of the triangle be the first spin, one can orientate this arbitrarily but lets choose up for now without loss of generality. Let the bottom left of the triangle be the second spin and we will now choose this to be down in order to minimize the energy with respect to the first spin. But how is one supposed to orientate the third and final spin located in the bottom right? 
 
 If one chooses this to be spin up we minimize the energy with respect to the second spin but maximize with respect to the first one. If we instead choose spin down the situation is reversed. We can never satisfy the other two spins simultaneously. This means that the ground state of the system will never be as low as for the square lattice or ferromagnetic case. Furthermore the ground state is highly degenerate since there is no unique way to reach it. This phenomenon is known as \emph{geometric frustration} and is illustrated in Figure \ref{fig:frustration}.
 
@@ -183,45 +183,56 @@ In the previous section we concluded by introducing the concept of frustration t
 \begin{equation}
 H=\sum\limits_{\left\langle i,j \right\rangle} J_{ij} S_{i} S_{j}
 \end{equation}
-where the coupling constants $J_{ij}$ now is a Gaussian random variable with zero mean and variance one. This Hamiltonian describes a class of disordered systems and we will focus on a subgroup of these called \emph{spin glasses} (SGs). What is special about SGs is the fact that they have a finite temperature disordered ground state. This means that below a critical temperature $T_c$ the disordered system will "freeze" with the spins in random positions determined by the particular set of couplings used. However, depending on the dimension of the lattice used there is a critical dimension below which there exists no finite temperature glass phase\cite{almeida}.
+where the coupling constants $J_{ij}$ are now a Gaussian distributed random numbers with mean zero and variance one. This Hamiltonian describes a class of disordered systems and we will focus on a subgroup of these called \emph{spin glasses} (SGs). What is special about SGs is the fact that they have a finite temperature disordered ground state. This means that below a critical temperature $T_c$ the disordered system will "freeze" with the spins in random positions determined by the particular set of couplings. However, depending on the dimension of the lattice there is a critical dimension below which no finite temperature glass phase exists\cite{almeida}.
 
-The main objective when examining disordered system is often to determine the critical exponents and we will concern ourselves with one of these, namely the \emph{stiffness exponent} $\theta$. This can be obtained through the scaling anzats
+The main objective when examining disordered system is often to determine the critical exponents and we will concern ourselves with one of these, namely the \emph{stiffness exponent} $\theta$. It can be obtained through the scaling ansatz
 
 \begin{equation}
 \Delta E \thicksim L^\theta
 \label{eq:scaling}
 \end{equation}
-where $L$ is the system size and $\Delta E$ is the cost of a domain wall. We will use the tried and true P-AP method\cite{hartmann}\cite{carter} to calculate $\Delta E$ which can outlined as follows:
+where $L$ is the system size and $\Delta E$ is the cost of a domain wall. We will use the tried and true P-AP method\cite{hartmann}\cite{carter} to calculate $\Delta E$ which can be outlined as follows:
 
 \begin{enumerate}
 \item Generate a random set of couplings and a random configuration of spins, i.e. a configuration at $T=\infty$, using periodic boundary conditions (PBCs).
 \item Do a quench by sequentially sweeping through the system and flip a spin if it is energetically favourable. Repeat until no more flips are accepted during a whole system sweep.
-\item Calculate the energy of the spin configuration, $E_{PBC}$, and perform a huge number of quenches with the same \emph{couplings}, only saving the lowest energy which yields an approximate ground state energy.
+\item Calculate the energy of the spin configuration $E_{PBC}$ and perform a huge number of quenches with the same \emph{couplings} but random spin configurations. The lowest energy found in this way yields an approximate ground state energy.
 \item Switch to anti-periodic boundary conditions (APBCs) by changing the sign of $J_{ij}$ along $x=L$ and repeat step 1-3 to obtain $E_{APBC}$.
-\item The cost of a domain wall is now given by $\Delta E = \commutator{|E_{PBC}-E_{APBC}|}$ where $[...]$ means averaging over different sets of couplings.
+\item The cost of a domain wall is now given by $\Delta E = \commutator{|E_{PBC}-E_{APBC}|}$, where $[...]$ means averaging over different sets of couplings.
 \end{enumerate}
-Using Eq. \eqref{eq:scaling} the stiffness exponent can now be obtained by calculating and plotting $\Delta E$ for different system sizes. The stiffness exponent is a measure of how the strength of systems couplings scale in the low temperature phase in a renormalization group sense. If the sign of $\theta$ is positive the system scale to strong couplings and conversely if the sign is negative the system scales to weak couplings and these are characteristic behaviour of SGs and paramagnetic phase respectively \cite{almeida}. What happens is that the system gets stuck in local minimas and there will an energy barrier that needs to be crossed for the system to break out of this metastable state. The size of this energy barrier is determined by the stiffness exponent and thus in 2D the size of the energy barriers decrease with system size allowing and in 3D they increase. 
+Using Eq. \eqref{eq:scaling} the stiffness exponent can now be obtained by calculating and plotting $\Delta E$ for different system sizes. The stiffness exponent is a measure of how the strength of systems couplings scale in the low temperature phase in a renormalization group sense. If the sign of $\theta$ is positive the system scales to strong couplings and conversely if the sign is negative the system scales to weak couplings and these are a characteristic behavior of SGs and paramagnetic phase, respectively \cite{almeida}. What happens is that the system gets stuck in local minima and there will an energy barrier that needs to be crossed for the system to break out of this metastable state. The size of this energy barrier is determined by the stiffness exponent and thus in 2D the size of the energy barriers decrease with system size allowing and in 3D they increase.
 
 As previously stated the objective of this project is to determine the stiffness exponent on a square lattice in two and three dimensions, using the algorithm for obtaining $\Delta E$ outlined above.
 
 \section{Method}
 \label{sec:method}
-We start of with a serial implementation, where the spins of the lattice are enumerated sequentially. At each lattice site the Hamiltonian is applied to the current spin and, with the rest of the system "held frozen", a spin-flip is evaluated and preformed. This is a rather trivial algorithm that is easily set up and run on a conventional CPU using any given language. For this paper we are provided with an implementation, written in C, that executes the given algorithm for a 2D lattice in serial, this we generalized to a serial version for a 3D lattice. However, the implementation of the serial code will not be subject to further discussion in this paper, but will rather serve as a reference point for data verification and benchmarking.
+We start from a serial implementation which works as follows. Beginning at the first lattice site, the Hamiltonian is applied to the current spin and a spin-flip is evaluated and accepted if energetically favorable. This is done for every spin, one after the other. These lattice sweeps are repeated until there are no spins flips during a whole sweep. This is a rather trivial algorithm that is easily set up and run with a single thread on a conventional CPU using any given language. For this project we are provided with an implementation written in C, that executes the given algorithm for a 2D lattice. This we generalized to a serial version for a 3D lattice. However, the implementation of the serial code will not be subject to further discussion in this paper, but will rather serve as a reference point for data verification and performance comparison.
 
-The CUDA implementation of the code will be written for the 2D lattice using modified code snippets from the serial version, while the 3D generalization will in turn be developed using the CUDA 2D version as basis.
+A first CUDA implementation of the code will be written for the 2D lattice using the serial version as reference. This implementation will already be written with focus on efficient parallelization. The CUDA 3D version will in turn be developed using the CUDA 2D version as basis. These first implementations are then enhanced with CUDA specific functions like error handling and device selection. The last enhancement will be an OpenMP version that uses several host threads in order to be able to utilize multiple GPUs for calculations.
 
-\subsection{GPU-Architecture}
+\subsection{NVIDIA GPU Architecture}
+NVIDIA Fermi or Kepler architecture GPUs consist of several streaming multiprocessors (SMs) which contain the so called CUDA cores (c.f. figure \ref{fig:fermi_sm}). Typical numbers are 16 SMs with 32 CUDA cores each (512 cores in total) for the Fermi architecture. And 14 SMs with 192 CUDA cores each (2688 cores in total) for its successor, the Kepler architecture. Compared to a CPU core these CUDA cores are rather simple. They can execute one instruction (floating point or integer) for a thread per clock cycle. All cores in a SM have access to a small amount of shared memory (typical 16 or 48 KiB, the 64 KiB in figure \ref{fig:fermi_sm} are shared memory and L1 cache combined). This memory has low latency but can only be accessed by threads executed by the same SM. All SMs have access to the global GPU memory which is nowadays several GiB in size.
 
-[MENTION: KERNELS, SHARED MEMORY, BLOCKS, THREADS]
+\begin{figure}
+\centering
+\includegraphics[width=.5\linewidth]{images/fermi_sm.png}
+\caption{Schematic of a streaming multiprocessor (NVIDIA Fermi architecture)\cite{gpu_nvidia_fermi}.}
+\label{fig:fermi_sm}
+\end{figure}
+
+\subsection{CUDA Programming Model}
+A CUDA program can consist of \textsc{C}, \textsc{C++}, \textsc{Fortran} (more languages are supported) code with parts that are executed on the host CPU and parts that are executed on the GPU (the s.c. kernels). Due to the GPU architecture these kernels are launched in grids of blocks of threads. Depending on the hardware each block can contain up to 512 or 1024 threads. All threads within a block have access to the same shared memory. For execution on the SMs threads are grouped in s.c. warps of 32 threads.
+
+To organize threads in CUDA one can use synchronization barriers and each thread has variables that contain thread and block indices. It is also important to note that CPU and GPU do not share the same memory address space, hence data has to be copied from/to host memory to/from GPU memory for processing. Even though with CUDA version 6 one does not have to take care of this explicitly anymore it is still an important thing to keep in mind in order to write efficient code.
 
 
 \subsection{CUDA Implementation}
-To be able to parallelize any problem in general one is required to split the problem up into isolated computational units, that in turn can be distributed to the available computational units. If one fails to accomplish isolated calculations a phenomenon known as race conditions will render non-deterministic calculation results. This essential emerges from the fact that individual computational units will execute code in an undefined order. Here we present an approach surmount this issue in the 2D and 3D case similar to that presented by M. Weigel and T. Yavors \cite{gpu_mc_spins}.
+To be able to parallelize any problem in general one is required to split it up into isolated tasks, that in turn can be distributed to the available computational units. If one fails to accomplish isolated calculations a phenomenon known as race conditions will result in non-deterministic calculations. This essentially emerges from the fact that individual computational units execute code in an undefined order. Here we present an approach to surmount this issue in the 2D and 3D case similar to that presented by M. Weigel and T. Yavors \cite{gpu_mc_spins}.
 
 \subsubsection{Two Dimensions}
-By placing a checker patter over the 2D grid of spins (figure \ref{fig:checker_grid}) the system is divided up into black and white tiles. Noticing that there are no couplings between individual black tiles and individual white tiles, but only in between black and white tiles, we conclude that each set of these are individually isolated and thus suitable for computation in parallel. One set of tiles will be set to be calculated while the other is felled "frozen". After the first set is completed shared and global memory is synchronized and the second set is attended to.
+By placing a checker pattern over the 2D grid of spins (figure \ref{fig:checker_grid}) the system is divided into black and white tiles. Notice that there are no adjacent tiles of the same color and hence there are no interactions between tiles of the same color. Therefore each set of black or white tiles is individually isolated and thus suitable for parallel computing. One color set of tiles will be processed while the others remain unchanged. After the first set of tiles is completed, shared and global memory is synchronized and the remaining tiles are processed.
 
-Each tile in the set will be designated for one CUDA block and thus will have to be self-consistent in shared memory. Noticing that each given tile will interact with its nearest neighbours, hence it is necessary to bring these spins and their corresponding couplings into the shared memory of the corresponding CUDA block, for efficient memory access. Refereed to as ghost couplings and spins, these are shown respectively as dashed lines and blue blobs in figure \ref{fig:gost_cells} for a tile of $2\times2$.
+Each tile in the set will be designated for one CUDA block. To avoid repeated access to global memory all spins of a tile should be copied to shared memory before starting the actual calculation. Each given tile will interact with the nearest neighbor spins around it, hence it is necessary to bring these spins and their corresponding couplings into shared memory too. Referred to as ghost couplings and spins, these are shown respectively as dashed lines and blue blobs in figure \ref{fig:gost_cells} for a tile of $2\times2$.
 
 
 \begin{figure}
@@ -229,38 +240,38 @@ Each tile in the set will be designated for one CUDA block and thus will have to
 \begin{minipage}{.65\textwidth}
   \centering
   \includegraphics[width=.5\linewidth]{images/4x4.pdf}
-  \caption{The two groups of tiles are marked with black and white squares. Here the spin orientation in tile 1 and 4 can be evaluated in parallel while 2 and 3 are held still and vice-versa.}
+  \caption{The two groups of tiles are marked with black and white squares. Here the spins in tile 1 and 4 can be processed in parallel while 2 and 3 remain unchanged and vice-versa.}
   \label{fig:checker_grid}
 \end{minipage}
 \hspace{0.05\linewidth}
 \begin{minipage}{.25\textwidth}
   \centering
   \includegraphics[width=1\linewidth]{images/2D_ghosts.pdf}
-  \captionof{figure}{A tile including its ghost cells.}
+  \captionof{figure}{A tile incl. ghost cells.}
   \label{fig:gost_cells}
 \end{minipage}
 \end{figure}
 
 
-It is further recognized that ghost spins will have to be selected with the periodic boundary condition in mind. Hence the indices of for instance the neighbouring spins in the two directions along the x-axis will be
+It is further recognized that ghost spins will have to be selected with the periodic boundary condition in mind. Hence the indices of for instance the neighboring spins in the two directions along the x-axis will be
 \begin{align*}
 x_+&=(x_c+1)\; \text{mod} \; L \;, \\
 x_-&=(x_c-1+L) \; \text{mod} \; L \;.
 \end{align*}
-Here $x_+$ and $x_-$ are the indices of the neighbouring spins along the positive and negative direction of the x-axis, $x_c$ is the index of the current spin, $L$ the side of the global system and "mod" signifies the modulus operator.
+Here $x_+$ and $x_-$ are the indices of the neighboring spins along the positive and negative direction of the x-axis, $x_c$ is the index of the current spin, $L$ the side of the global system and "mod" signifies the modulus operator.
 
-The number of computational CUDA blocks are half the number of the total number of tiles, since half of the system can be calculated in parallel. In the example shown in figure \ref{fig:checker_grid} there will be two CUDA blocks submitted for calculation, when they are finished the white tiles are submitted. This is done row-wise, where a group of a black and a white tile are sequentially sent for calculation. The first tile of the first row will be set to be white, while on the second row the second tile is instead white. This is achieved in 2D by alternating between these selection-modes using the boolean condition 
+The number of CUDA blocks is only half the amount of tiles since only one tile color can be processed in parallel at a time. In the example shown in figure \ref{fig:checker_grid} there are two CUDA blocks for calculation. When they are finished the white tiles are submitted. This is done row-wise, where a group of a black and a white tile are sequentially sent for calculation. The first tile of the first row is chosen to be white, then in the second row the second tile is instead white. This is achieved in 2D by alternating between these selection-modes using the condition 
 \begin{equation}
 b_y\; \text{mod} \; 2 == 0 \;,
 \label{eq:sele_mode_2d}
 \end{equation}
-where $b_y$ is the block row index. This condition will yield "true" if $b_y$ is even and "false" if not.
+where $b_y$ is the block row index. This condition will yield \textsc{true} if $b_y$ is even and \textsc{false} otherwise.
 
-The spins will be further divided into computational threads inside each block. Theses will have access to the same shared memory and will begin to populate it with data picked from the global memory. Here, the number of spins attended to by each thread is fixed to 2. Shown for the $2\times2$ block in figure \ref{fig:2D_threads} each thread will attend to a spin at a time and to avoid race conditions a synchronization is preformed in between the two spin flips per thread. Thus the spins attended to in parallel are marked as red and green respectively for each set. The selection of the first or the second spin to be handled first by each thread is based on the same condition as in \ref{eq:sele_mode_2d}.
+The spins will be processed by threads inside each block. These threads have access to the same shared memory and will begin to populate it with data picked from global memory. Here the number of spins processed by each thread is fixed to 2. Shown for the $2\times2$ block in figure \ref{fig:2D_threads} each thread will process one spin at a time. To avoid race conditions a synchronization is performed in between the two spin flips by each thread. Thus the spins processed in parallel are marked as red and green respectively for each set. The selection of the first or the second spin to be handled first by each thread is based on the same condition as in \ref{eq:sele_mode_2d}.
  
-This division into 2 spins per thread will imply a divisibility by 2 for the block size that will in turn migrate up to the system size. Hence, the allowed system sized will be $4\times4$, $8\times8$, $16\times16$...
+This division into 2 spins per thread will imply a divisibility by 2 for the block size. And because we have two tiles that are processed after each other the system size will have to be divisible by 2 times the block size. For the sake of simplicity we use system sizes of $4\times4$, $8\times8$, $16\times16$, $32\times32$ and so on.
 
-Multi-dimensional array are avoided, even though it is more convenient given the programming point of view, specially since CUDA provides with an API for handling this kind of set-up. The reason they are avoided is foremost since they introduce an extra overhead as an extra memory look-up during access and as a more expensive allocation and population during initialization and transfer between host and device.
+Multi-dimensional arrays are avoided even though it is more convenient from the programming point of view. Especially since CUDA provides functions for handling this kind of setup. The reason they are avoided is foremost since they introduce extra overhead in the form of an extra memory lookup during access and in the form of more expensive allocation and population during initialization and transfer between host and device.
 
 The access is instead solved by the utilization of an arithmetic operation where the location in memory is calculated before access using $x + y \times L$, where $x$ is the column index, $y$ is the row index and $L$ is the column count of each row.
 
@@ -273,18 +284,27 @@ The access is instead solved by the utilization of an arithmetic operation where
 
 
 \subsubsection{Three Dimensions}
-In three dimensions basically the same approach is employed. However, there is an extra set of coupling along the new direction and all the system quantities are added an extra dimensions, that is the three sets of couplings and the spins. 
+In three dimensions basically the same approach is employed. However, there is an extra set of couplings along the new direction and all the system quantities are added an extra dimension. That is the three sets of couplings and the spins. 
 
-Furthermore the selection-mode for starting with black or white tiles at each row is instead of the boolean condition \ref{eq:sele_mode_2d} chosen based on
+Furthermore the selection-mode for starting with black or white tiles at each row is instead of the condition \ref{eq:sele_mode_2d} chosen based on
 \begin{equation}
 (b_y + b_z)\; \text{mod} \; 2 == 0 \;,
 \end{equation}
-where $b_y$ and $b_z$ are the row and depth indexes of the blocks, respectively. 
+where $b_y$ and $b_z$ are the row and depth indices of the blocks, respectively. 
 
-In addition to this, another key difference compared to the 2D version is the calculation of the memory index that includes the depth index $z$ as well, yielding $x + y \times L + z \times L^2$.
+In addition to this another key difference compared to the 2D version is the calculation of the memory index. We need to include the depth index $z$ as well, yielding $x + y \times L + z \times L^2$.
 
 
-\subsection{Optimization}
+\subsection{Performance Considerations}
+Since access to global memory has high latency compared to shared memory it is in general a good idea to copy all data that threads in a block need from global to shared memory before processing it. This will be done in our code.
+
+In our implementation we will stick to the random number generator host code in order to get directly comparable results with the sequential implementation. The drawback of this is that we have to create our spin and coupling configurations in host memory and then copy it to the device before we can start the calculation. Especially for larger systems the time of this data transfer becomes noticeable. But at least this is a way to share work between the GPU and CPU. For cases where the CPU is slowing down the GPU one could use the \href{http://docs.nvidia.com/cuda/curand/index.html}{cuRAND} library to create random numbers directly on the GPU.
+
+We want to be able to use multiple GPUs for our calculations. A straightforward way to do this with our code is to use OpenMP to create one host thread per GPU and divide the loop over random spin sets amongst several GPUs. One could also use OpenMP to further parallelize the initialization of the spin sets that happen on the CPU. But because OpenMP creates overhead and most of the calculation time is spent on the GPU this does not seem promising.
+
+In order to get good GPU utilization we will have to keep all SMs (and CUDA cores) occupied. If we assume 16 SMs and 500 to 2000 cores it is clear that for smaller system sizes our rather simple implementation will not be able to create enough threads to do that.
+
+Possibilities to reduce or circumvent aforementioned drawbacks will be discussed in section \ref{sec:discussion_gpualgo}.
 
 \section{Results}
 \label{sec:results}
@@ -315,15 +335,15 @@ In this section we will discuss both the physical results as well as the perform
 Calculating the stiffness exponent is, to say the least, a time consuming task requiring huge amounts of computations. As displayed in Fig. \ref{fig:E_2D} and \ref{fig:E_3D} the number of quenches necessary to obtain an decent approximation the ground state rapidly increases and on top of that, the time to perform each quench increases with the system size. This can be seen by observing that $(\Delta E)^2$ rapidly diverges from the expected result for a low number of quenches. This reflects the nature of the SGs with huge numbers of metastable states and the difficulty to find an approximate ground state. You need to start from increasingly many initial spin configurations in order to find a few where you do not get stuck in a local minima. The only upside with this extremely complex problem is the fact that it is parallelizable and thus well suited for computing on a GPU.
 
 \subsection{GPU-Algorithm Performance}
+\label{sec:discussion_gpualgo}
 [STEFAN: DISCUSSION ABOUT GPU PERFORMANCE AND BENCHMARKING TIMES]
 
 \subsection{Concluding Remarks}
-To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbour-interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and are found to be $\theta_{2D}=-0.289$ and $\theta_{3D}=0.227$ for two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
+To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbor interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and are found to be $\theta_{2D}=-0.289$ and $\theta_{3D}=0.227$ for two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
 
 The implementation of the model was an optimized GPU-accelerated algorithm using CUDA which had great performance and showed great promise for future research.
 
 \pagebreak
-
 \section*{Appendix: Simulation Code}
 \begin{lstlisting}
 CODE GOES HERE :)
@@ -367,6 +387,15 @@ Oxford: Oxford University Press. p. 243. ISBN 9780198509400.
 \textit{GPU accelerated Monte Carlo simulations of lattice spin models} \\
 M. Weigel, T. Yavors. \\
 Physics Procedia, \textbf{15} (2011)
+
+\bibitem{gpu_nvidia_fermi}
+\href{http://www.nvidia.com/content/pdf/fermi_white_papers/nvidia_fermi_compute_architecture_whitepaper.pdf}{\textit{Whitepaper -- NVIDIA's Next Generation CUDA Compute Architecture: Fermi}} \\
+NVIDIA Corporation (2009)
+
+\bibitem{gpu_nvidia_kepler}
+\href{http://www.nvidia.com/content/pdf/kepler/NVIDIA-kepler-GK110-Architecture-Whitepaper.pdf}{\textit{Whitepaper -- NVIDIA's Next Generation CUDA Compute Architecture: Kepler GK110}} \\
+NVIDIA Corporation (2012)
+
 
 \end{thebibliography}
 \end{document}
