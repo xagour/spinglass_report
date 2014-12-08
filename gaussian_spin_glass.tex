@@ -311,7 +311,7 @@ Possibilities to reduce or circumvent aforementioned drawbacks will be discussed
 The simulation data obtained through the method and algorithms explained in the previous sections will be displayed and explained in this section.
 
 \subsection{The Stiffness Exponent}
-In Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} we can see the square of the domain wall energy in two and three
+In Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} we can see the square of the domain wall energy in two and three dimensions plotted versus the system size for an increasing number of quenches. Fig. \ref{fig:E_2D_small} and \ref{fig:E_3D_small} are the same graphs but focused on the interval where best accuracy is achieved. Tab. \ref{tab:stiffness_exponent} contains all values obtained for the stiffness exponent from the different curves. These values are obtained by making a least square fit for the points $L=4$ and $L=8$ since the domain wall energy is rapidly staring to grow at larger system sizes.
 
 \begin{table}[h]
 \label{tab:stiffness_exponent}
@@ -324,8 +324,9 @@ In Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} we can see the square of t
     $10^4$ & $-0.2404$ & $1.2678$ \\ \hline
     $10^6$ & $-0.6394$ & $1.4897$ \\ \hline
     $10^8$ & $-1.2623$ & $0.8337$ \\ \hline
+    Reference & $-0.289$ & $0.225$ \\ \hline
   \end{tabular}
-  \caption{The value of the stiffness exponent obtained by least square fit from the two best (lowest) system sizes $L=4,8$ in 2D and 3D.}
+  \caption{The value of the stiffness exponent obtained by least square fit from the two smallest system sizes $L=4,8$ in 2D and 3D.}
 \end{table}
 
 \begin{figure}
@@ -363,14 +364,18 @@ In Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} we can see the square of t
 In this section we will discuss both the physical results as well as the performance of our algorithm.
 
 \subsection{The Stiffness Exponent}
-Calculating the stiffness exponent is, to say the least, a time consuming task requiring huge amounts of computations. As displayed in Fig. \ref{fig:E_2D} and \ref{fig:E_3D} the number of quenches necessary to obtain an decent approximation the ground state rapidly increases and on top of that, the time to perform each quench increases with the system size. This can be seen by observing that $(\Delta E)^2$ rapidly diverges from the expected result for a low number of quenches. This reflects the nature of the SGs with huge numbers of metastable states and the difficulty to find an approximate ground state. You need to start from increasingly many initial spin configurations in order to find a few where you do not get stuck in a local minima. The only upside with this extremely complex problem is the fact that it is parallelizable and thus well suited for computing on a GPU.
+Calculating the stiffness exponent is, to say the least, a time consuming task requiring huge amounts of computations. As displayed in Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} the number of quenches necessary to obtain an decent approximation the ground state rapidly increases and on top of that, the time to perform each quench increases with the system size. This can be seen by observing that $(\Delta E)^2$ rapidly diverges from the expected result for a low number of quenches. This reflects the nature of the SGs with huge numbers of metastable states and the difficulty to find an approximate ground state. One has to start from increasingly many initial spin configurations in order to find a few where you do not get stuck in a local minima. 
+
+From Tab. \ref{tab:stiffness_exponent} we can see that the best values obtained are $\theta_{2D}=-0.24$ for $10^4$ quenches and $\theta_{3D}=0.83$ for $10^8$ quenches in two and three dimensions respectively. In two dimensions this is a quite good values and in three dimension is is a bit poorer. To obtain better values primer 
+
+The only upside with this extremely complex problem is the fact that it is parallelizable and thus well suited for computing on a GPU.
 
 \subsection{GPU-Algorithm Performance}
 \label{sec:discussion_gpualgo}
 [STEFAN: DISCUSSION ABOUT GPU PERFORMANCE AND BENCHMARKING TIMES]
 
-\subsection{Concluding Remarks}
-To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbour interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and are found to be $\theta_{2D}=-0.289$ and $\theta_{3D}=0.227$ for two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
+\section{Conclusion}
+To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbour interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and the best estimate is found to be $\theta_{2D}=-0.24$ for $10^4$ quenches and $\theta_{3D}=0.83$ for $10^8$ quenches in two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
 
 The implementation of the model was an optimized GPU-accelerated algorithm using CUDA which had great performance and showed great promise for future research.
 
