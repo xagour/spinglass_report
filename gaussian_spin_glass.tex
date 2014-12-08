@@ -215,7 +215,7 @@ NVIDIA Fermi or Kepler architecture GPUs consist of several streaming multiproce
 
 \begin{figure}
 \centering
-\includegraphics[width=.5\linewidth]{images/fermi_sm.png}
+\includegraphics[width=.8\linewidth]{images/fermi_sm.png}
 \caption{Schematic of a streaming multiprocessor (NVIDIA Fermi architecture)\cite{gpu_nvidia_fermi}.}
 \label{fig:fermi_sm}
 \end{figure}
@@ -258,7 +258,7 @@ It is further recognized that ghost spins will have to be selected with the peri
 x_+&=(x_c+1)\; \text{mod} \; L \;, \\
 x_-&=(x_c-1+L) \; \text{mod} \; L \;.
 \end{align*}
-Here $x_+$ and $x_-$ are the indices of the neighboring spins along the positive and negative direction of the x-axis, $x_c$ is the index of the current spin, $L$ the side of the global system and "mod" signifies the modulus operator.
+Here $x_+$ and $x_-$ are the indices of the neighbouring spins along the positive and negative direction of the x-axis, $x_c$ is the index of the current spin, $L$ the side of the global system and "mod" signifies the modulus operator.
 
 The number of CUDA blocks is only half the amount of tiles since only one tile color can be processed in parallel at a time. In the example shown in figure \ref{fig:checker_grid} there are two CUDA blocks for calculation. When they are finished the white tiles are submitted. This is done row-wise, where a group of a black and a white tile are sequentially sent for calculation. The first tile of the first row is chosen to be white, then in the second row the second tile is instead white. This is achieved in 2D by alternating between these selection-modes using the condition 
 \begin{equation}
@@ -308,21 +308,52 @@ Possibilities to reduce or circumvent aforementioned drawbacks will be discussed
 
 \section{Results}
 \label{sec:results}
+The simulation data obtained through the method and algorithms explained in the previous sections will be displayed and explained in this section.
 
 \subsection{The Stiffness Exponent}
+In Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} we can see the square of the domain wall energy in two and three
+
+\begin{table}[h]
+\label{tab:stiffness_exponent}
+\centering
+  \begin{tabular}{| c | c | c |}
+    \hline
+    $N_{quenches}$ & $\theta_{2D}$ & $\theta_{3D}$ \\ \hline
+    $10^2$ & $0.4288$ & $1.4310$ \\ \hline
+    $10^3$ & $0.1293$ & $1.4116$ \\ \hline
+    $10^4$ & $-0.2404$ & $1.2678$ \\ \hline
+    $10^6$ & $-0.6394$ & $1.4897$ \\ \hline
+    $10^8$ & $-1.2623$ & $0.8337$ \\ \hline
+  \end{tabular}
+  \caption{The value of the stiffness exponent obtained by least square fit from the two best (lowest) system sizes $L=4,8$ in 2D and 3D.}
+\end{table}
 
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{images/spinglass2D.pdf}
+\includegraphics[width=\textwidth]{images/spinglass2D_large.pdf}
 \caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in two dimensions. The black line is the reference value for the stiffness exponent $\theta=-0.289$.}
-\label{fig:E_2D}
+\label{fig:E_2D_large}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{images/spinglass3D.pdf}
+\includegraphics[width=\textwidth]{images/spinglass2D_small.pdf}
+\caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in two dimensions. The black line is the reference value for the stiffness exponent $\theta=-0.289$.}
+\label{fig:E_2D_small}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{images/spinglass3D_large.pdf}
 \caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in three dimensions. The black line is the reference value of $\theta=0.225$.}
-\label{fig:E_3D}
+\label{fig:E_3D_large}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{images/spinglass3D_small.pdf}
+\caption{The square of the domain wall energy $\Delta E ^ 2$ as a function of system size $L$ for different number of quenches in three dimensions. The black line is the reference value of $\theta=0.225$.}
+\label{fig:E_3D_small}
 \end{figure}
 
 \subsection{GPU-Algorithm Performance}
@@ -339,7 +370,7 @@ Calculating the stiffness exponent is, to say the least, a time consuming task r
 [STEFAN: DISCUSSION ABOUT GPU PERFORMANCE AND BENCHMARKING TIMES]
 
 \subsection{Concluding Remarks}
-To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbor interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and are found to be $\theta_{2D}=-0.289$ and $\theta_{3D}=0.227$ for two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
+To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbour interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and are found to be $\theta_{2D}=-0.289$ and $\theta_{3D}=0.227$ for two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
 
 The implementation of the model was an optimized GPU-accelerated algorithm using CUDA which had great performance and showed great promise for future research.
 
@@ -354,32 +385,32 @@ CODE GOES HERE :)
 \begin{thebibliography}{100}
 
 \bibitem{onsager}
-Crystal Statistics I. A Two-Dimensional Model with an Order-Disorder Transition \\
+\textit{Crystal Statistics I. A Two-Dimensional Model with an Order-Disorder Transition} \\
 L.Onsager \\
 Phys. Rev. 65, 117, (1943)
 
 \bibitem{almeida}
-Chaos and stiffness exponents for short-range Gaussian Ising spin glasses \\
+\textit{Chaos and stiffness exponents for short-range Gaussian Ising spin glasses} \\
 Sebasti\~{a}o T O Almeida, Evaldo M F Curado andFernando D Nobre \\
 J. Stat. Mech (2013)
 
 \bibitem{hartmann}
-Stiffness exponent of two-dimensional Ising spin glasses for nonperiodic boundary conditions using aspect-ratio scaling \\
+\textit{Stiffness exponent of two-dimensional Ising spin glasses for nonperiodic boundary conditions using aspect-ratio scaling} \\
 Phys. Rev. B 66, 224401 - Published 4 December 2002 \\
 Alexander K. Hartmann, Alan J. Bray, A. C. Carter, M. A. Moore, and A. P. Young
 
 \bibitem{fisher}
-Theory of Random Magnets \\
+\textit{Theory of Random Magnets} \\
 DS Fisher, GM Grinstein, A Khurana \\
 Physics Today, 1988 
 
 \bibitem{carter}
-Aspect-Ratio Scaling and The Stiffness Exponent $\theta$ for Ising Spin Glasses \\
+\textit{Aspect-Ratio Scaling and The Stiffness Exponent $\theta$ for Ising Spin Glasses} \\
 A. C. Carter, A. J. Bray, M. A. Moore (January 4, 2014) \\
 http://arxiv.org/pdf/cond-mat/0108050.pdf
 
 \bibitem{nishimori}
-Statistical Physics of Spin Glasses and Information Processing: An Introduction. \\
+\textit{Statistical Physics of Spin Glasses and Information Processing: An Introduction.} \\
 Nishimori, Hidetoshi (2001). \\
 Oxford: Oxford University Press. p. 243. ISBN 9780198509400.
 
