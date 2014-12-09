@@ -314,7 +314,6 @@ The simulation data obtained through the method and algorithms explained in the 
 In Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} we can see the square of the domain wall energy in two and three dimensions plotted versus the system size for an increasing number of quenches. Fig. \ref{fig:E_2D_small} and \ref{fig:E_3D_small} are the same graphs but focused on the interval where best accuracy is achieved. Tab. \ref{tab:stiffness_exponent} contains all values obtained for the stiffness exponent from the different curves. These values are obtained by making a least square fit for the points $L=4$ and $L=8$ since the domain wall energy is rapidly staring to grow at larger system sizes. In table Tab. \ref{tab:couplings_2D} and \ref{tab:couplings_3D} are the number of disorders couplings used to obtain statistical accuracy for different system sizes and number of quenches. The cost of a domain wall as well as the standard deviation is calculated using these values.
 
 \begin{table}[h]
-\label{tab:stiffness_exponent}
 \centering
   \begin{tabular}{| c | c | c |}
     \hline
@@ -327,6 +326,7 @@ In Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} we can see the square of t
     Reference & $-0.289$ & $0.225$ \\ \hline
   \end{tabular}
   \caption{The value of the stiffness exponent obtained by least square fit from the two smallest system sizes $L=4,8$ in 2D and 3D.}
+  \label{tab:stiffness_exponent}
 \end{table}
 
 \begin{table}[h]
@@ -410,10 +410,8 @@ To summarize, we have calculated the stiffness exponent $\theta$ for the nearest
 The implementation of the model was an optimized GPU-accelerated algorithm using CUDA which had great performance and showed great promise for future research.
 
 \pagebreak
-\section*{Appendix: Simulation Code}
-\begin{lstlisting}
-CODE GOES HERE :)
-\end{lstlisting}
+\section*{Appendix: Simulation Code (3D, OpenMP)}
+\lstinputlisting[language=C++]{spinglass3d_omp.cu}
 
 \pagebreak
 
