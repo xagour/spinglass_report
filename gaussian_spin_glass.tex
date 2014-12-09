@@ -388,6 +388,39 @@ In Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} we can see the square of t
 \end{figure}
 
 \subsection{GPU-Algorithm Performance}
+As expected, for small system sizes our code does not create enough parallelism and can therefore not fully utilize the GPU. Figure \ref{fig:perf_flips} shows the achieved spin updates per nanosecond for different system sizes in 2D and 3D. First we can see that our OpenMP code with one thread is not slower than the code without OpenMP. We can also see that our approach to use multiple GPUs (with one OpenMP thread per GPU) is promising. The per-GPU performance with OpenMP threads is not more than $10\%$ lower than the reference performance of a single GPU without OpenMP. For the largest tested system size (512 in 3D) measurements become somewhat unstable because of the long transfer times to/from GPU memory.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{images/perf_flips.pdf}
+\caption{Spin updates per nanosecond for different system sizes to compare single GPU vs. multiple GPUs with OpenMP and different CPUs.}
+\label{fig:perf_flips}
+\end{figure}
+
+If we compare the runs with GeForce GTX TITAN GPUs on different computers we also see that the host CPU influences the performance to some extend. We tried if it was possible to mitigate this by executing the host code with multiple OpenMP threads but that did not help, in fact performance went down. In our case apparently an AMD Opteron with 2.3 GHz clock speed can not get full performance out of a high-end GeForce GTX TITAN GPU. An Intel Core i7 with 3.5 GHz clock speed has an overall faster subsystem that manages to tax the GPU better.
+
+Figure \ref{fig:perf_times} shows typical execution times for various system sizes in 2D and 3D. Because performance of our code is not constant for varying system sizes it is not a simple $L^2$ or $L^3$ dependency. Another factor is that the larger the system, the more lattice sweeps are needed to reach a minimum. Table \ref{tab:avg_sweeps} shows the average number of sweeps necessary to reach a minimum for different system sizes.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.65\textwidth]{images/perf_time2d.pdf}
+\includegraphics[width=0.65\textwidth]{images/perf_time3d.pdf}
+\caption{Typical run times for various system sizes in 2D and 3D for N=6 ($10^6$ spin sets).}
+\label{fig:perf_times}
+\end{figure}
+
+\begin{table}
+\centering
+  \begin{tabular}{| c | c | c | c | c | c | c | c | c | c | c | c | c | c |}
+    \hline
+    L & 4 & 8 & 16 & 32 & 64 & 128 & 256 & 512 & 1024 & 2048 & 4096 & 8192 & 16384 \\ \hline
+	$n_{sweeps}$, 2D & 3.2 & 4.9 &  6.6 &  8.3 &  9.3 & 10.7 & 12.7 & 13.6 & 15.0 & 16.3 & 17.9 & 19.2 & 20.5 \\ \hline
+	$n_{sweeps}$, 3D & 5.8 & 8.2 & 11.0 & 13.8 & 16.4 & 19.2 & 21.9 & 24.4 &      &      &      &      &      \\ \hline
+  \end{tabular}
+  \caption{Average number of lattice sweeps for different system sizes until a minimum is reached.}
+  \label{tab:avg_sweeps}
+\end{table}
+
 
 \section{Discussion}
 \label{sec:discussion}
@@ -402,7 +435,9 @@ The only upside with this extremely complex problem is the fact that it is paral
 
 \subsection{GPU-Algorithm Performance}
 \label{sec:discussion_gpualgo}
-[STEFAN: DISCUSSION ABOUT GPU PERFORMANCE AND BENCHMARKING TIMES]
+
+One  approach to minimize this influence of the host CPU could be the use of cuRAND to generate random numbers on the GPU. One could also try to hide host to device memory copy times by preparing and copying new data while the GPU is processing the current data set. Performance for larger systems is good, therefore to increase performance for small system sizes the following approach might be promising. Instead of generating small arrays for spins and couplings one could create multiple configurations at once embedded in a larger array that is sent to the GPU for processing. It is not entirely trivial because of boundary conditions but not too complex either.
+
 
 \section{Conclusion}
 \label{sec:conclusions}
@@ -411,10 +446,8 @@ To summarize, we have calculated the stiffness exponent $\theta$ for the nearest
 The implementation of the model was an optimized GPU-accelerated algorithm using CUDA which had great performance and showed great promise for future research.
 
 \pagebreak
-\section*{Appendix: Simulation Code}
-\begin{lstlisting}
-CODE GOES HERE :)
-\end{lstlisting}
+\section*{Appendix: Simulation Code (3D, OpenMP)}
+\lstinputlisting[language=C++]{spinglass3d_omp.cu}
 
 \pagebreak
 
