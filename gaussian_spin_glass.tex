@@ -116,12 +116,10 @@
 \horrule{2pt} \\[0.5cm] % Thick bottom horizontal rule
 }
 
-\author{Jens Wir\'{e}n \\
-Farhad Kimanos \\
-Stefan Fleischmann \\
-\normalsize jenswir@kth.se \\
-\normalsize kimanos@kth.se \\
-\normalsize sfle@kth.se} % Your name
+\author{Jens Wir\'{e}n \--- \small \textsc{jenswir@kth.se} \\
+Farhad Kimanos \small \--- \textsc{kimanos@kth.se} \\
+Stefan Fleischmann \--- \small \textsc{sfle@kth.se} \\
+} % Your name
 
 \date{\normalsize\today} % Today's date or a custom date
 
@@ -140,6 +138,8 @@ To accelerate the calculations with graphics cards we implement a double checker
 \pagebreak
 
 \tableofcontents
+
+\pagebreak
 
 \section{Introduction}
 
@@ -215,7 +215,7 @@ NVIDIA Fermi or Kepler architecture GPUs consist of several streaming multiproce
 
 \begin{figure}
 \centering
-\includegraphics[width=.8\linewidth]{images/fermi_sm.png}
+\includegraphics[width=0.5\textwidth]{images/fermi_sm.png}
 \caption{Schematic of a streaming multiprocessor (NVIDIA Fermi architecture)\cite{gpu_nvidia_fermi}.}
 \label{fig:fermi_sm}
 \end{figure}
@@ -237,16 +237,16 @@ Each tile in the set will be designated for one CUDA block. To avoid repeated ac
 
 \begin{figure}
 \centering
-\begin{minipage}{.65\textwidth}
+\begin{minipage}{.60\textwidth}
   \centering
   \includegraphics[width=.5\linewidth]{images/4x4.pdf}
   \caption{The two groups of tiles are marked with black and white squares. Here the spins in tile 1 and 4 can be processed in parallel while 2 and 3 remain unchanged and vice-versa.}
   \label{fig:checker_grid}
 \end{minipage}
 \hspace{0.05\linewidth}
-\begin{minipage}{.25\textwidth}
+\begin{minipage}{.3\textwidth}
   \centering
-  \includegraphics[width=1\linewidth]{images/2D_ghosts.pdf}
+  \includegraphics[width=0.9\linewidth]{images/2D_ghosts.pdf}
   \captionof{figure}{A tile including ghost cells.}
   \label{fig:gost_cells}
 \end{minipage}
@@ -399,13 +399,13 @@ As expected, for small system sizes our code does not create enough parallelism 
 
 If we compare the runs with GeForce GTX TITAN GPUs on different computers we also see that the host CPU influences the performance to some extend. We tried if it was possible to mitigate this by executing compute intensive parts of the host code (e.g. the spin array population) with multiple OpenMP threads but that did not help, in fact performance went down. In our case apparently an AMD Opteron with 2.3 GHz clock speed can not get full performance out of a high-end GPU like the GeForce GTX TITAN. An Intel Core i7 with 3.5 GHz clock speed has an overall faster subsystem that manages to tax the GPU better.
 
-Figure \ref{fig:perf_times} shows typical execution times for various system sizes in two and three dimensions. Because performance of our code is not constant for varying system sizes it is not a deterministic $L^2$ or $L^3$ dependency. Another factor is that the larger the system, the more lattice sweeps are needed to reach a minimum. Table \ref{tab:avg_sweeps} shows the average number of lattice sweeps necessary to reach a minimum for different system sizes.
+Figure \ref{fig:perf_times} shows typical execution times for various system sizes in two and three dimensions. Because performance of our code is not constant for different system sizes it is not a simple $L^2$ or $L^3$ dependency (but for $L\leq32$ in 3D and $L\leq128$ in 2D these terms dominate, c.f. fig. \ref{fig:perf_times}). Another factor is that the larger the system, the more lattice sweeps are needed to reach a minimum. Table \ref{tab:avg_sweeps} shows the average number of lattice sweeps necessary to reach a minimum for different system sizes.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.65\textwidth]{images/perf_time2d.pdf}
-\includegraphics[width=0.65\textwidth]{images/perf_time3d.pdf}
-\caption{Typical run times for various system sizes in 2D and 3D for N=6 ($10^6$ spin sets).}
+\includegraphics[width=0.85\textwidth]{images/perf_time2d.pdf}
+\includegraphics[width=0.85\textwidth]{images/perf_time3d.pdf}
+\caption{Typical run times for various system sizes in 2D (top) and 3D (bottom) for N=6 ($10^6$ spin sets).}
 \label{fig:perf_times}
 \end{figure}
 
@@ -434,7 +434,7 @@ From Tab. \ref{tab:stiffness_exponent} we can see that the best values obtained 
 \subsection{Possible GPU-Algorithm Improvements}
 \label{sec:discussion_gpualgo}
 
-One  approach to minimize the influence of the host CPU that we mentioned in the previous section could be the use of cuRAND to generate random numbers on the GPU. One could also try to hide host to device memory copy times by preparing and copying new data while the GPU is processing the current data set.
+One  approach to minimize the influence of the host CPU that we mentioned in the previous section could be the use of \href{http://docs.nvidia.com/cuda/curand/index.html}{cuRAND} to generate random numbers on the GPU. One could also try to hide host to device memory copy times by preparing and copying new data while the GPU is processing the current data set.
 
 Performance for larger systems is good, therefore to increase performance for small system sizes the following approach might be promising. Instead of generating small arrays for spins and couplings one could create multiple configurations at once embedded in a larger array that is sent to the GPU for processing. It is not entirely trivial because of boundary conditions but not too complex either.
 
@@ -448,11 +448,6 @@ To summarize, we have calculated the stiffness exponent $\theta$ for the nearest
 The model was implemented as a GPU-accelerated algorithm using CUDA which had great performance and showed promise for further improvement and future research.
 
 \pagebreak
-\section*{Appendix: Simulation Code (3D, OpenMP)}
-\lstinputlisting[language=C++]{spinglass3d_omp.cu}
-
-\pagebreak
-
 \begin{thebibliography}{100}
 
 \bibitem{onsager}
@@ -498,6 +493,10 @@ NVIDIA Corporation (2009)
 \href{http://www.nvidia.com/content/pdf/kepler/NVIDIA-kepler-GK110-Architecture-Whitepaper.pdf}{\textit{Whitepaper -- NVIDIA's Next Generation CUDA Compute Architecture: Kepler GK110}} \\
 NVIDIA Corporation (2012)
 
-
 \end{thebibliography}
+
+\pagebreak
+\section*{Appendix: Application Code (3D, OpenMP)}
+\lstinputlisting[language=C++]{spinglass3d_omp.cu}
+
 \end{document}
