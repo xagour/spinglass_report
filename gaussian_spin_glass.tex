@@ -388,7 +388,7 @@ In Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} we can see the square of t
 \end{figure}
 
 \subsection{GPU-Algorithm Performance}
-As expected, for small system sizes our code does not create enough parallelism and can therefore not fully utilize the GPU. Figure \ref{fig:perf_flips} shows the achieved spin updates per nanosecond for different system sizes in 2D and 3D. First we can see that our OpenMP code with one thread is not slower than the code without OpenMP. We can also see that our approach to use multiple GPUs (with one OpenMP thread per GPU) is promising. The per-GPU performance with OpenMP threads is not more than $10\%$ lower than the reference performance of a single GPU without OpenMP. For the largest tested system size (512 in 3D) measurements become somewhat unstable because of the long transfer times to/from GPU memory.
+As expected, for small system sizes our code does not create enough parallelism and can therefore not fully utilize the GPU. Figure \ref{fig:perf_flips} shows the achieved spin updates per nanosecond for different system sizes in 2D and 3D. First we can see that our OpenMP code with one thread is not slower than the code without OpenMP. We can also see that our approach to use multiple GPUs (with one OpenMP thread per GPU) is promising because the per-GPU performance with OpenMP threads is not more than $10\%$ lower than the reference performance of a single GPU without OpenMP. For the largest tested system size (512 in 3D) measurements become somewhat unstable because of the relatively long transfer times to/from GPU memory.
 
 \begin{figure}
 \centering
@@ -397,9 +397,9 @@ As expected, for small system sizes our code does not create enough parallelism 
 \label{fig:perf_flips}
 \end{figure}
 
-If we compare the runs with GeForce GTX TITAN GPUs on different computers we also see that the host CPU influences the performance to some extend. We tried if it was possible to mitigate this by executing the host code with multiple OpenMP threads but that did not help, in fact performance went down. In our case apparently an AMD Opteron with 2.3 GHz clock speed can not get full performance out of a high-end GeForce GTX TITAN GPU. An Intel Core i7 with 3.5 GHz clock speed has an overall faster subsystem that manages to tax the GPU better.
+If we compare the runs with GeForce GTX TITAN GPUs on different computers we also see that the host CPU influences the performance to some extend. We tried if it was possible to mitigate this by executing compute intensive parts of the host code (e.g. the spin array population) with multiple OpenMP threads but that did not help, in fact performance went down. In our case apparently an AMD Opteron with 2.3 GHz clock speed can not get full performance out of a high-end GPU like the GeForce GTX TITAN. An Intel Core i7 with 3.5 GHz clock speed has an overall faster subsystem that manages to tax the GPU better.
 
-Figure \ref{fig:perf_times} shows typical execution times for various system sizes in 2D and 3D. Because performance of our code is not constant for varying system sizes it is not a simple $L^2$ or $L^3$ dependency. Another factor is that the larger the system, the more lattice sweeps are needed to reach a minimum. Table \ref{tab:avg_sweeps} shows the average number of sweeps necessary to reach a minimum for different system sizes.
+Figure \ref{fig:perf_times} shows typical execution times for various system sizes in two and three dimensions. Because performance of our code is not constant for varying system sizes it is not a deterministic $L^2$ or $L^3$ dependency. Another factor is that the larger the system, the more lattice sweeps are needed to reach a minimum. Table \ref{tab:avg_sweeps} shows the average number of lattice sweeps necessary to reach a minimum for different system sizes.
 
 \begin{figure}
 \centering
@@ -427,23 +427,25 @@ Figure \ref{fig:perf_times} shows typical execution times for various system siz
 In this section we will discuss both the physical results and the performance of our algorithm.
 
 \subsection{The Stiffness Exponent}
-Calculating the stiffness exponent is, to say the least, a time consuming task requiring huge amounts of computations. As displayed in Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} the number of quenches necessary to obtain a decent approximation the ground state rapidly increases and on top of that, the time to perform each quench increases with the system size. This can be seen by observing that $(\Delta E)^2$ rapidly diverges from the expected result for a low number of quenches. This reflects the nature of the SGs with huge numbers of metastable states and the difficulty to find an approximate ground state. One has to start from increasingly many initial spin configurations in order to find a few where you do not get stuck in a local minimum. 
+Calculating the stiffness exponent is, to say the least, a time consuming task requiring huge amounts of computations. As displayed in Fig. \ref{fig:E_2D_large} and \ref{fig:E_3D_large} the number of quenches necessary to obtain a decent approximation of the ground state rapidly increases and on top of that, the time to perform each quench increases with the system size. This can be seen by observing that $(\Delta E)^2$ rapidly diverges from the expected result for a low number of quenches. This reflects the nature of the SGs with huge numbers of metastable states and the difficulty to find an approximate ground state. One has to start from increasingly many initial spin configurations in order to find a few where one does not get stuck in a local minimum. 
 
-From Tab. \ref{tab:stiffness_exponent} we can see that the best values obtained are $\theta_{2D}=-0.24$ for $10^4$ quenches and $\theta_{3D}=0.83$ for $10^8$ quenches in two and three dimensions respectively. In two dimensions this is a quite good value and in three dimension it is at least decent. To obtain better values one would primary need to average over more couplings and secondary go to a higher number of quenches.
+From Tab. \ref{tab:stiffness_exponent} we can see that the best values obtained are $\theta_{2D}=-0.24$ for $10^4$ quenches and $\theta_{3D}=0.83$ for $10^8$ quenches in two and three dimensions, respectively. In two dimensions this is a quite good value and in three dimension it is at least decent. To obtain better values one would primarily need to average over more couplings and secondary go to a higher number of quenches. Even though with our limited time and hardware resources this was not possible it was interesting to explore approaches to break down this complex problem and see that it is parallelizable to a great extend. It is thus well suited for computing on GPUs.
 
-The only upside with this extremely complex problem is the fact that it is parallelizable and thus well suited for computing on a GPU.
-
-\subsection{GPU-Algorithm Performance}
+\subsection{Possible GPU-Algorithm Improvements}
 \label{sec:discussion_gpualgo}
 
-One  approach to minimize this influence of the host CPU could be the use of cuRAND to generate random numbers on the GPU. One could also try to hide host to device memory copy times by preparing and copying new data while the GPU is processing the current data set. Performance for larger systems is good, therefore to increase performance for small system sizes the following approach might be promising. Instead of generating small arrays for spins and couplings one could create multiple configurations at once embedded in a larger array that is sent to the GPU for processing. It is not entirely trivial because of boundary conditions but not too complex either.
+One  approach to minimize the influence of the host CPU that we mentioned in the previous section could be the use of cuRAND to generate random numbers on the GPU. One could also try to hide host to device memory copy times by preparing and copying new data while the GPU is processing the current data set.
+
+Performance for larger systems is good, therefore to increase performance for small system sizes the following approach might be promising. Instead of generating small arrays for spins and couplings one could create multiple configurations at once embedded in a larger array that is sent to the GPU for processing. It is not entirely trivial because of boundary conditions but not too complex either.
+
+Another point for improvement could be to analyze and optimize memory access and data structures and explore possibilities to make the spin flip and energy calculation algorithms more efficient.
 
 
 \section{Conclusion}
 \label{sec:conclusions}
-To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbour interaction Gaussian Ising spin glass on a square lattice in two and three dimension using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and the best estimate is found to be $\theta_{2D}=-0.24$ for $10^4$ quenches and $\theta_{3D}=0.83$ for $10^8$ quenches in two and three dimensions respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions, however in three dimensions $\theta_{3D}>0$ implies that a there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
+To summarize, we have calculated the stiffness exponent $\theta$ for the nearest-neighbor interaction Gaussian Ising spin glass on a square lattice in two and three dimensions using the scaling ansatz $\Delta E \thicksim L^\theta$. The domain wall energy $\Delta E$ was calculated using the P-AP method. The value for the stiffness exponent was obtained by curve fitting in a least square sense and the best estimate is found to be $\theta_{2D}=-0.24$ for $10^4$ quenches and $\theta_{3D}=0.83$ for $10^8$ quenches in two and three dimensions, respectively. Since $\theta_{2D}<0$ we conclude that there exists no finite temperature glass phase in two dimensions. In three dimensions however $\theta_{3D}>0$ implies that there is indeed a finite temperature glass phase in agreement with other simulations as well as experiments\cite{hartmann}\cite{fisher}\cite{carter}. 
 
-The implementation of the model was an optimized GPU-accelerated algorithm using CUDA which had great performance and showed great promise for future research.
+The model was implemented as a GPU-accelerated algorithm using CUDA which had great performance and showed promise for further improvement and future research.
 
 \pagebreak
 \section*{Appendix: Simulation Code (3D, OpenMP)}
